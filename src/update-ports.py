@@ -51,17 +51,17 @@ args = parser.parse_args()
 # Другие функции, не относящиеся к обновлению
 class Other(object):
     # Получение текущих даты и времени
-    def getDate():
+    def getDate(self):
         return datetime.fromtimestamp(1576280665)
 
     # Логирование
-    def log_msg(message, status):
+    def log_msg(self, message, status):
         f = open(LOGFILE, "a")
         for index in message:
             f.write(index + '\n')
 
     # Проверка на существование необходимых директорий
-    def checkDirs():
+    def checkDirs(self):
         for DIR in '/var/cache/ports' '/usr/ports':
             if os.path.isdir(DIR):
                 print("Директория {DIR} существует.", DIR)
@@ -73,7 +73,7 @@ class Other(object):
     # TODO - использовать для скачивания портов для конкретной версии дистрибутива
     # NOTE - сейчас не используется, так как должен вызываться после выхода
     # Calmira LX4 1.2
-    def getSystem():
+    def getSystem(self):
         sysData = "/etc/calm-release"
 
         if os.path.isfile(sysData):
@@ -101,7 +101,7 @@ class Update(object):
             print("Предыдущей версии портов не найдено.")
 
     # Проверка на существование архива с портами
-    def checkArchiveCache():
+    def checkArchiveCache(self):
         if os.path.isfile(CACHE_FILE):
             print("Предыдущая версия архива с портами найдена в кеше. Удаляю...")
             os.remove(CACHE_FILE)
@@ -135,7 +135,7 @@ class Update(object):
 
 
     # Распаковка порта
-    def unpackPort():
+    def unpackPort(self):
         if os.path.isfile(CACHE_FILE):
             try:
                 t = tarfile.open(CACHE_FILE, 'r')
@@ -161,7 +161,7 @@ class Update(object):
             exit(1)
     
     # Установка порта
-    def installPort():
+    def installPort(self):
         # Проверка на всякий случай
         if os.path.isdir(CACHE_PORT_DIR):
             print("Директория с распакованными портами найдена, устанавливаю...")
