@@ -31,7 +31,14 @@ import requests
 PORTDIR = "/usr/ports" # Директория с портами
 CACHE = "/var/cache/ports" # Директория с кешем
 CACHE_FILE = CACHE + "/ports.txz" # Скачанный пакет с портами
-CACHE_PORT_DIR = CACHE + "/ports"
+CACHE_PORT_DIR = CACHE + "/ports" # Распакованные в кеш порты
+
+# Проверка на запуск от root
+GID = os.getgid()
+
+if GID != 0:
+    print("Ошибка: вы должны запустить этот скрипт от root!")
+    exit(1)
 
 # Command line parsing
 
@@ -51,29 +58,29 @@ args = parser.parse_args()
 # Другие функции, не относящиеся к обновлению
 class Other(object):
     # Получение текущих даты и времени
-    def getDate(self):
+    def getDate():
         return datetime.fromtimestamp(1576280665)
 
     # Логирование
-    def log_msg(self, message, status):
+    def log_msg(message, status):
         f = open(LOGFILE, "a")
         for index in message:
             f.write(index + '\n')
 
     # Проверка на существование необходимых директорий
-    def checkDirs(self):
-        for DIR in '/var/cache/ports' '/usr/ports':
+    def checkDirs():
+        for DIR in "/var/cache/ports", "/usr/ports":
             if os.path.isdir(DIR):
-                print("Директория {DIR} существует.", DIR)
+                print("Директория {} существует.", DIR)
             else:
-                print("Директории {DIR} не существует, создаю новую.", DIR)
+                print("Директории {} не существует, создаю новую.", DIR)
                 os.makedirs(DIR)
 
     # Получение данных системы
     # TODO - использовать для скачивания портов для конкретной версии дистрибутива
     # NOTE - сейчас не используется, так как должен вызываться после выхода
     # Calmira LX4 1.2
-    def getSystem(self):
+    def getSystem():
         sysData = "/etc/calm-release"
 
         if os.path.isfile(sysData):
@@ -101,7 +108,7 @@ class Update(object):
             print("Предыдущей версии портов не найдено.")
 
     # Проверка на существование архива с портами
-    def checkArchiveCache(self):
+    def checkArchiveCache():
         if os.path.isfile(CACHE_FILE):
             print("Предыдущая версия архива с портами найдена в кеше. Удаляю...")
             os.remove(CACHE_FILE)
@@ -110,7 +117,7 @@ class Update(object):
 
 
     # Скачивание файла из репозиториев
-    def downloadPort(self, tree):
+    def downloadPort(tree):
         f = open(r'/var/cache/ports/ports.txz',"wb")
 
         # Скачивание порта
@@ -135,7 +142,7 @@ class Update(object):
 
 
     # Распаковка порта
-    def unpackPort(self):
+    def unpackPort():
         if os.path.isfile(CACHE_FILE):
             try:
                 t = tarfile.open(CACHE_FILE, 'r')
@@ -161,7 +168,7 @@ class Update(object):
             exit(1)
     
     # Установка порта
-    def installPort(self):
+    def installPort():
         # Проверка на всякий случай
         if os.path.isdir(CACHE_PORT_DIR):
             print("Директория с распакованными портами найдена, устанавливаю...")
@@ -188,8 +195,11 @@ class Update(object):
 
 # Начальные проверки
 
+print("checkDirs")
 Other.checkDirs()
+print("checkInstalledPorts")
 Update.checkInstalledPorts()
+print("checkInstalledPorts")
 Update.checkArchiveCache()
 
 # Скачивание и установка
