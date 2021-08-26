@@ -33,6 +33,21 @@ CACHE = "/var/cache/ports" # Директория с кешем
 CACHE_FILE = CACHE + "/ports.txz" # Скачанный пакет с портами
 CACHE_PORT_DIR = CACHE + "/ports"
 
+# Command line parsing
+
+parser = argparse.ArgumentParser(description='update-ports - port system update program')
+parser.add_argument("--tree", "-t",
+                    choices=["stable", "testing"],
+                    required=True, type=str, help="Net branch from which ports are update")
+
+args = parser.parse_args()
+
+####################
+##                ##
+## Main functions ##
+##                ##
+####################
+
 # Другие функции, не относящиеся к обновлению
 class Other(object):
     # Получение текущих даты и времени
@@ -164,17 +179,12 @@ class Update(object):
         # Копирование
         shutil.copy2(CACHE_PORT_DIR, '/usr/')
 
+#################
+##             ##
+## Script body ##
+##             ##
+#################
 
-# Command line parsing
-
-parser = argparse.ArgumentParser(description='update-ports - port system update program')
-parser.add_argument("--tree", "-t"
-                    choices=["stable", "testing"],
-                    required=True, type=str, help="Net branch from which ports are update")
-
-args = parser.parse_args()
-
-DownloadTree = args.tree
 
 # Начальные проверки
 
@@ -182,14 +192,15 @@ Other.checkDirs()
 Update.checkInstalledPorts()
 Update.checkArchiveCache()
 
-# Скачивание
-Update.downloadPort(DownloadTree)
+# Скачивание и установка
+
+Update.downloadPort(args.tree)
 Update.unpackPort()
 Update.installPort()
 
 # Конечные проверки
-print("Проверка на наличие '/usr/ports'... " end="")
 
+print("Проверка на корректное обновление...")
 if os.path.isdir(PORTDIR):
     print("ОК")
     exit(0)
