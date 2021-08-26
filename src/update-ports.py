@@ -32,6 +32,7 @@ PORTDIR = "/usr/ports" # Директория с портами
 CACHE = "/var/cache/ports" # Директория с кешем
 CACHE_FILE = CACHE + "/ports.txz" # Скачанный пакет с портами
 CACHE_PORT_DIR = CACHE + "/ports" # Распакованные в кеш порты
+PORT = CACHE_PORT_DIR + "/ports"
 
 # Проверка на запуск от root
 GID = os.getgid()
@@ -184,7 +185,8 @@ class Update(object):
             print("Предыдущей версии портов не найдено")
 
         # Копирование
-        shutil.copytree(CACHE_PORT_DIR, '/usr/ports')
+        #shutil.copytree(CACHE_PORT_DIR, '/usr/ports')
+        shutil.copytree(PORT, '/usr/ports')
 
 #################
 ##             ##
