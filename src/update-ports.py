@@ -22,6 +22,7 @@
 #
 
 import os
+import argparse
 import shutil
 import tarfile
 import requests
@@ -54,6 +55,9 @@ class Other(object):
                 os.makedirs(DIR)
 
     # Получение данных системы
+    # TODO - использовать для скачивания портов для конкретной версии дистрибутива
+    # NOTE - сейчас не используется, так как должен вызываться после выхода
+    # Calmira LX4 1.2
     def getSystem():
         sysData = "/etc/calm-release"
 
@@ -159,3 +163,36 @@ class Update(object):
 
         # Копирование
         shutil.copy2(CACHE_PORT_DIR, '/usr/')
+
+
+# Command line parsing
+
+parser = argparse.ArgumentParser(description='update-ports - port system update program')
+parser.add_argument("--tree", "-t"
+                    choices=["stable", "testing"],
+                    required=True, type=str, help="Net branch from which ports are update")
+
+args = parser.parse_args()
+
+DownloadTree = args.tree
+
+# Начальные проверки
+
+Other.checkDirs()
+Update.checkInstalledPorts()
+Update.checkArchiveCache()
+
+# Скачивание
+Update.downloadPort(DownloadTree)
+Update.unpackPort()
+Update.installPort()
+
+# Конечные проверки
+print("Проверка на наличие '/usr/ports'... " end="")
+
+if os.path.isdir(PORTDIR):
+    print("ОК")
+    exit(0)
+else:
+    print("НЕ НАЙДЕНО! Возможно, что-то во время обновления произошло не так.")
+    exit(1)
