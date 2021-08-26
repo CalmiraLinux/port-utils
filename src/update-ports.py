@@ -30,6 +30,7 @@ import requests
 PORTDIR = "/usr/ports" # Директория с портами
 CACHE = "/var/cache/ports" # Директория с кешем
 CACHE_FILE = CACHE + "/ports.txz" # Скачанный пакет с портами
+CACHE_PORT_DIR = CACHE + "/ports"
 
 # Другие функции, не относящиеся к обновлению
 class Other(object):
@@ -106,7 +107,38 @@ class Update(object):
         f.write(ufr.content) # Downloading
 
         f.close()
-
-    # Установка порта
-    def installPort():
         
+        if os.path.isfile(CACHE_FILE):
+            print("Успешно скачано!")
+        else:
+            print("Файл не был скачан! Проверьте доступ в интернет.")
+            exit(1)
+
+
+    # Распаковка порта
+    def unpackPort():
+        if os.path.isfile(CACHE_FILE):
+            try:
+                t = tarfile.open(CACHE_FILE, 'r')
+
+                t.extractall(path=CACHE_PORT_DIR)
+
+                # Проверка на наличие распакованной директории
+                if os.path.isdir(CACHE_PORT_DIR):
+                    print("Пакет успешно распакован")
+                else:
+                    print("Неизвестная ошибка, аварийное завершение работы.")
+                    exit(1)
+
+            except ReadError:
+                print("Ошибка чтения пакета. Возможно, он битый.")
+                exit(1)
+
+            except CompressionError:
+                print("Ошибка распаковки пакета. Формат не поддерживается.")
+                exit(1)
+        else:
+            print("Ошибка распаковки пакета. Пакет не найден. Возможно, он не был скачан, либо сторонняя программа изменила его имя во время распаковки")
+            exit(1)
+    
+
