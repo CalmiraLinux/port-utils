@@ -184,7 +184,7 @@ class Update(object):
             print("Предыдущей версии портов не найдено")
 
         # Копирование
-        shutil.copy2(CACHE_PORT_DIR, '/usr/')
+        shutil.copytree(CACHE_PORT_DIR, '/usr/ports')
 
 #################
 ##             ##
