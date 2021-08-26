@@ -26,6 +26,7 @@ import argparse
 import shutil
 import tarfile
 import requests
+from datetime import datetime
 
 ## Base Variables
 PORTDIR = "/usr/ports" # Директория с портами
@@ -109,7 +110,7 @@ class Other(object):
             f = open("/var/log/update-ports-dbg.log", "a")
 
             for index in message:
-                f.write(getDate() + index + '\n')
+                f.write(index)
 
             f.close()
         else:
@@ -214,19 +215,24 @@ class Update(object):
 
 # Начальные проверки
 
-Other.printDbg("checkDirs")
+Other.printDbg("checkDirs\n")
 Other.checkDirs()
 
-Other.printDbg("checkInstalledPorts")
+Other.printDbg("checkInstalledPorts\n")
 Update.checkInstalledPorts()
 
-Other.printDbg("checkInstalledPorts")
+Other.printDbg("checkArchiveCache\n")
 Update.checkArchiveCache()
 
 # Скачивание и установка
 
+Other.printDbg("downloadPort\n")
 Update.downloadPort(args.tree)
+
+Other.printDbg("unpackPort\n")
 Update.unpackPort()
+
+Other.printDbg("installPort\n")
 Update.installPort()
 
 # Конечные проверки
