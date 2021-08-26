@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/python3
 #
 # update-ports - Port system update program
 # Copyright (C) 2021 Michail Krasnov
