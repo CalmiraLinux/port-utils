@@ -47,6 +47,9 @@ parser = argparse.ArgumentParser(description='update-ports - port system update 
 parser.add_argument("--tree", "-t",
                     choices=["stable", "testing"],
                     required=True, type=str, help="Net branch from which ports are update")
+parser.add_argument("--debug", "-d",
+                    choices=["yes", "no"],
+                    type=str, help="Displaying debug messages")
 
 args = parser.parse_args()
 
@@ -96,7 +99,21 @@ class Other(object):
 
         return systemData["distroVersion"]
 
+    # Вывод debug-сообщений на экран
+    def printDbg(message):
+        if args.debug == "yes":
+            # Выводить на экран сообщения
+            print(message)
+        elif args.debug == "no":
+            # Выводить сообщения в лог
+            f = open("/var/log/update-ports-dbg.log", "a")
 
+            for index in message:
+                f.write(getDate() + index + '\n')
+
+            f.close()
+        else:
+            pass
 
 # Обновление и установка портов
 class Update(object):
@@ -197,11 +214,13 @@ class Update(object):
 
 # Начальные проверки
 
-print("checkDirs")
+Other.printDbg("checkDirs")
 Other.checkDirs()
-print("checkInstalledPorts")
+
+Other.printDbg("checkInstalledPorts")
 Update.checkInstalledPorts()
-print("checkInstalledPorts")
+
+Other.printDbg("checkInstalledPorts")
 Update.checkArchiveCache()
 
 # Скачивание и установка
@@ -212,7 +231,7 @@ Update.installPort()
 
 # Конечные проверки
 
-print("Проверка на корректное обновление...")
+print("Проверка на корректное обновление...", end = ' ')
 if os.path.isdir(PORTDIR):
     print("ОК")
     exit(0)
