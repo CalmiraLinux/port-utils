@@ -14,3 +14,11 @@ update-ports --tree stable/testing
 
 * `stable` - стабильная ветка;
 * `testing` - нестабильная ветка, порты из которой ещё тестируются.
+
+## Зависимости
+
+* `requests` - модуль Python. Установка:
+
+```python
+pip3 install requests
+```
