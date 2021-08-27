@@ -159,6 +159,7 @@ class Update(object):
             fp = open("/usr/share/update-ports/branches", "r")
             print(*fp)
             fp.close()
+            exit(0)
 
         else:
             print(_("Error! Branch {0} does not exist!", tree))
@@ -169,9 +170,9 @@ class Update(object):
         f.close()
         
         if os.path.isfile(CACHE_FILE):
-            print("Downloaded successfully!")
+            print(_("Downloaded successfully!"))
         else:
-            print("The file has not been downloaded! Check internet access.")
+            print(_("The file has not been downloaded! Check internet access."))
             exit(1)
 
 
@@ -185,13 +186,13 @@ class Update(object):
 
                 # Checking for an unpacked directory
                 if os.path.isdir(CACHE_PORT_DIR):
-                    print("Package unpacked successfully.")
+                    print(_("Package unpacked successfully."))
                 else:
-                    print("Unknown error, crash.")
+                    print(_("Unknown error, crash."))
                     exit(1)
 
             except ReadError:
-                print("Package read error. Perhaps he is broken.")
+                print(_("Package read error. Perhaps he is broken."))
                 exit(1)
 
             except CompressionError:
