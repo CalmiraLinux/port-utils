@@ -1,0 +1,92 @@
+# Russian translation for update-ports
+# Copyright (C) 2021 Michail Krasnov
+# This file is distributed under the same license as the update-ports package.
+# For Calmira LX4 1.1
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-08-27 02:44+0300\n"
+"PO-Revision-Date: 2021-08-27 HO:MI+ZONE\n"
+"Last-Translator: Michail Krasnov <linuxoid85@gmail.com>\n"
+"Language-Team: ru <linuxoid85@gmail.com>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: update-ports.py:48
+msgid "Error: you must run this script as root!"
+msgstr "Ошибка: вы должны запускать этот скрипт от имени root!"
+
+#: update-ports.py:85
+#, python-brace-format
+msgid "Directory {0} exists."
+msgstr "Директория {0} существует"
+
+#: update-ports.py:87
+msgid "Directory {} does not exist, creating a new one."
+msgstr "Директории {0} не существует, создаётся новая."
+
+#: update-ports.py:101
+msgid ""
+"Error: the file with distribution data does not exist, or there is no access "
+"to read it. Exit."
+msgstr "Ошибка: файла с данными дистрибутива не существует, либо нет доступа "
+"на его чтения. Выход."
+
+#: update-ports.py:130
+msgid "The previous version of ports is installed. Removed..."
+msgstr "Предыдущая версия портов установлена. Удаляется..."
+
+#: update-ports.py:133 update-ports.py:209
+msgid "No previous ports were found."
+msgstr "Предыдущие версии портов не установлены."
+
+#: update-ports.py:138
+msgid ""
+"The previous version of the archive with ports was found in the cache. "
+"Removed ..."
+msgstr "В кеше была найдена предыдущая версия портов. Удаляется..."
+
+#: update-ports.py:141
+msgid "No previous version of the ports system was found."
+msgstr "Предвдущей версии портов не обнаружено."
+
+#: update-ports.py:155
+#, python-brace-format
+msgid "Error! Branch {0} does not exist!"
+msgstr "Ошибка! Ветки {0} не существует!"
+
+#: update-ports.py:189
+msgid "Package unpacking error. The format is not supported."
+msgstr "Ошибка распаковки пакета. Формат не поддерживается."
+
+#: update-ports.py:192
+msgid ""
+"Package unpacking error. Package not found. It may not have been downloaded, "
+"or a third-party program changed it's name during unpacking."
+msgstr "Ошибка распаковки пакета. Пакет не существует. Возможно, он не был "
+"скачан, либо был удалён сторонней программой во время распаковки"
+
+#: update-ports.py:199
+msgid "Directory with unpacked ports found, installing..."
+msgstr "Директория с распакованными портами существует, устанавливается..."
+
+#: update-ports.py:201
+msgid "Package unpacking error: directory not found."
+msgstr "Ошибка распаковки пакета: директория не существует."
+
+#: update-ports.py:206
+msgid "Found directory with previous ports version. Removed..."
+msgstr "Найдена директория с предыдущей версией портов. Удаляется..."
+
+#: update-ports.py:246
+msgid "Checking for correct update..."
+msgstr "Проверка на корректность обновления..."
+
+#: update-ports.py:251
+msgid "NOT FOUND! It is possible that something went wrong during the update."
+msgstr "НЕ НАЙДЕН! Возможно, что во время обновления что-то пошло не так."

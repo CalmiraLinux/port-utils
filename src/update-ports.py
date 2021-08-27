@@ -27,19 +27,25 @@ import shutil
 import tarfile
 import requests
 from datetime import datetime
+import gettext
 
 ## Base Variables
 PORTDIR = "/usr/ports" # Директория с портами
 CACHE = "/var/cache/ports" # Директория с кешем
 CACHE_FILE = CACHE + "/ports.txz" # Скачанный пакет с портами
 CACHE_PORT_DIR = CACHE + "/ports" # Распакованные в кеш порты
-PORT = CACHE_PORT_DIR + "/ports"
+PORT = CACHE_PORT_DIR + "/ports"  # Порты, которые установятся в /usr/ports
+
+## getext
+gettext.bindtextdomain('update-ports', '/usr/share/locale')
+gettext.textdomain('update-ports')
+_ = gettext.gettext
 
 # Проверка на запуск от root
 GID = os.getgid()
 
 if GID != 0:
-    print("Ошибка: вы должны запустить этот скрипт от root!")
+    print(_("Error: you must run this script as root!"))
     exit(1)
 
 # Command line parsing
@@ -76,9 +82,9 @@ class Other(object):
     def checkDirs():
         for DIR in "/var/cache/ports", "/usr/ports":
             if os.path.isdir(DIR):
-                print("Директория {} существует.", DIR)
+                print(_("Directory {0} exists.", DIR))
             else:
-                print("Директории {} не существует, создаю новую.", DIR)
+                print(_("Directory {} does not exist, creating a new one.", DIR))
                 os.makedirs(DIR)
 
     # Получение данных системы
@@ -92,7 +98,7 @@ class Other(object):
             log_msg("system data : OK", "OK")
         else:
             log_msg("system data : FAIL", "EMERG")
-            print("Ошибка: файла с данными дистрибутива не существует, либо нет доступа на его чтение. Выход.")
+            print(_("Error: the file with distribution data does not exist, or there is no access to read it. Exit."))
             exit(1)
 
         with open(sysData, 'r') as f:
@@ -121,18 +127,18 @@ class Update(object):
     # Проверка на существование установленных портов
     def checkInstalledPorts():
         if os.path.isdir(PORTDIR):
-            print("Предыдущая версия портов установлена. Удаляю...")
+            print(_("The previous version of ports is installed. Removed..."))
             shutil.rmtree(PORTDIR)
         else:
-            print("Предыдущей версии портов не найдено.")
+            print(_("No previous ports were found."))
 
     # Проверка на существование архива с портами
     def checkArchiveCache():
         if os.path.isfile(CACHE_FILE):
-            print("Предыдущая версия архива с портами найдена в кеше. Удаляю...")
+            print(_("The previous version of the archive with ports was found in the cache. Removed ..."))
             os.remove(CACHE_FILE)
         else:
-            print("Предыдущей версии системы портов не найдено.")
+            print(_("No previous version of the ports system was found."))
 
 
     # Скачивание файла из репозиториев
@@ -146,7 +152,7 @@ class Update(object):
         elif tree == "testing":
             ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/ports-lx4_1.1.txz")
         else:
-            print("Ошибка! Ветки {tree} не существует!", tree)
+            print(_("Error! Branch {0} does not exist!", tree))
             exit(1)
 
         f.write(ufr.content) # Downloading
@@ -154,9 +160,9 @@ class Update(object):
         f.close()
         
         if os.path.isfile(CACHE_FILE):
-            print("Успешно скачано!")
+            print("Downloaded successfully!")
         else:
-            print("Файл не был скачан! Проверьте доступ в интернет.")
+            print("The file has not been downloaded! Check internet access.")
             exit(1)
 
 
@@ -170,37 +176,37 @@ class Update(object):
 
                 # Проверка на наличие распакованной директории
                 if os.path.isdir(CACHE_PORT_DIR):
-                    print("Пакет успешно распакован")
+                    print("Package unpacked successfully.")
                 else:
-                    print("Неизвестная ошибка, аварийное завершение работы.")
+                    print("Unknown error, crash.")
                     exit(1)
 
             except ReadError:
-                print("Ошибка чтения пакета. Возможно, он битый.")
+                print("Package read error. Perhaps he is broken.")
                 exit(1)
 
             except CompressionError:
-                print("Ошибка распаковки пакета. Формат не поддерживается.")
+                print(_("Package unpacking error. The format is not supported."))
                 exit(1)
         else:
-            print("Ошибка распаковки пакета. Пакет не найден. Возможно, он не был скачан, либо сторонняя программа изменила его имя во время распаковки")
+            print(_("Package unpacking error. Package not found. It may not have been downloaded, or a third-party program changed it's name during unpacking."))
             exit(1)
     
     # Установка порта
     def installPort():
         # Проверка на всякий случай
         if os.path.isdir(CACHE_PORT_DIR):
-            print("Директория с распакованными портами найдена, устанавливаю...")
+            print(_("Directory with unpacked ports found, installing..."))
         else:
-            print("Ошибка распаковки пакета: директория не найдена.")
+            print(_("Package unpacking error: directory not found."))
             exit(1)
         
         # Проверка на наличие предыдуще
         if os.path.isdir(PORTDIR):
-            print("Найдена директория с предыдущей версией портов. Удаляю...")
+            print(_("Found directory with previous ports version. Removed..."))
             shutil.rmtree(PORTDIR)
         else:
-            print("Предыдущей версии портов не найдено")
+            print(_("No previous ports were found.")))
 
         # Копирование
         #shutil.copytree(CACHE_PORT_DIR, '/usr/ports')
@@ -237,10 +243,10 @@ Update.installPort()
 
 # Конечные проверки
 
-print("Проверка на корректное обновление...", end = ' ')
+print(_("Checking for correct update...", end = ' '))
 if os.path.isdir(PORTDIR):
     print("ОК")
     exit(0)
 else:
-    print("НЕ НАЙДЕНО! Возможно, что-то во время обновления произошло не так.")
+    print(_("NOT FOUND! It is possible that something went wrong during the update."))
     exit(1)
