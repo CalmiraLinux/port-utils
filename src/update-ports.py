@@ -30,11 +30,11 @@ from datetime import datetime
 import gettext
 
 ## Base Variables
-PORTDIR = "/usr/ports" # Директория с портами
-CACHE = "/var/cache/ports" # Директория с кешем
-CACHE_FILE = CACHE + "/ports.txz" # Скачанный пакет с портами
-CACHE_PORT_DIR = CACHE + "/ports" # Распакованные в кеш порты
-PORT = CACHE_PORT_DIR + "/ports"  # Порты, которые установятся в /usr/ports
+PORTDIR = "/usr/ports" # Ports directory
+CACHE = "/var/cache/ports" # Cache directory
+CACHE_FILE = CACHE + "/ports.txz" # Downloaded package with ports
+CACHE_PORT_DIR = CACHE + "/ports" # Ports unpacked to cache
+PORT = CACHE_PORT_DIR + "/ports"  # Ports to install in /usr/ports
 
 ## getext
 gettext.bindtextdomain('update-ports', '/usr/share/locale')
@@ -51,9 +51,13 @@ if GID != 0:
 # Command line parsing
 
 parser = argparse.ArgumentParser(description='update-ports - port system update program')
+
+# Net branch
 parser.add_argument("--tree", "-t",
                     choices=["stable", "testing"],
                     required=True, type=str, help="Net branch from which ports are update")
+
+# Debug mode
 parser.add_argument("--debug", "-d",
                     choices=["yes", "no"],
                     type=str, help="Displaying debug messages")
@@ -66,19 +70,19 @@ args = parser.parse_args()
 ##                ##
 ####################
 
-# Другие функции, не относящиеся к обновлению
+# Other functions
 class Other(object):
-    # Получение текущих даты и времени
+    # Getting the current date and time
     def getDate():
         return datetime.fromtimestamp(1576280665)
 
-    # Логирование
+    # Logging
     def log_msg(message, status):
         f = open(LOGFILE, "a")
         for index in message:
             f.write(index + '\n')
 
-    # Проверка на существование необходимых директорий
+    # Checking for the existence of required directories
     def checkDirs():
         for DIR in "/var/cache/ports", "/usr/ports":
             if os.path.isdir(DIR):
@@ -87,9 +91,9 @@ class Other(object):
                 print(_("Directory {} does not exist, creating a new one.", DIR))
                 os.makedirs(DIR)
 
-    # Получение данных системы
-    # TODO - использовать для скачивания портов для конкретной версии дистрибутива
-    # NOTE - сейчас не используется, так как должен вызываться после выхода
+    # Receiving system data
+    # TODO - use to download ports for a specific version of the distribution
+    # NOTE - currently not used, as it should be called after the release of
     # Calmira LX4 1.2
     def getSystem():
         sysData = "/etc/calm-release"
@@ -106,13 +110,13 @@ class Other(object):
 
         return systemData["distroVersion"]
 
-    # Вывод debug-сообщений на экран
+    # Outputting debug messages
     def printDbg(message):
         if args.debug == "yes":
-            # Выводить на экран сообщения
+            # Display messages on screen
             print(message)
         elif args.debug == "no":
-            # Выводить сообщения в лог
+            # Log messages
             f = open("/var/log/update-ports-dbg.log", "a")
 
             for index in message:
@@ -122,9 +126,9 @@ class Other(object):
         else:
             pass
 
-# Обновление и установка портов
+# Updating and installing the port
 class Update(object):
-    # Проверка на существование установленных портов
+    # Checking for the existence of installed ports
     def checkInstalledPorts():
         if os.path.isdir(PORTDIR):
             print(_("The previous version of ports is installed. Removed..."))
@@ -132,7 +136,7 @@ class Update(object):
         else:
             print(_("No previous ports were found."))
 
-    # Проверка на существование архива с портами
+    # Checking for the existence of a port with an archive
     def checkArchiveCache():
         if os.path.isfile(CACHE_FILE):
             print(_("The previous version of the archive with ports was found in the cache. Removed ..."))
@@ -141,12 +145,12 @@ class Update(object):
             print(_("No previous version of the ports system was found."))
 
 
-    # Скачивание файла из репозиториев
+    # Downloading the port from repositories
     def downloadPort(tree):
         f = open(r'/var/cache/ports/ports.txz',"wb")
 
-        # Скачивание порта
-        # На данный момент поддерживаются ветки 'stable' и 'testing'
+        # Downloading
+        # Currently the 'stable' and 'testing' branches are supported
         if tree == "stable":
             ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/ports-lx4_1.1.txz")
         elif tree == "testing":
@@ -166,7 +170,7 @@ class Update(object):
             exit(1)
 
 
-    # Распаковка порта
+    # Unpacking the port
     def unpackPort():
         if os.path.isfile(CACHE_FILE):
             try:
@@ -174,7 +178,7 @@ class Update(object):
 
                 t.extractall(path=CACHE_PORT_DIR)
 
-                # Проверка на наличие распакованной директории
+                # Checking for an unpacked directory
                 if os.path.isdir(CACHE_PORT_DIR):
                     print("Package unpacked successfully.")
                 else:
@@ -192,24 +196,29 @@ class Update(object):
             print(_("Package unpacking error. Package not found. It may not have been downloaded, or a third-party program changed it's name during unpacking."))
             exit(1)
     
-    # Установка порта
+    # Installing the port
     def installPort():
-        # Проверка на всякий случай
+        # Check for compatibility with Calmira
+        if getSystem() != "1.1":
+            print(_("Error: the update-ports version is not compatible with the current Calmira version!"))
+            exit(1)
+
+
+        # Checking just in case
         if os.path.isdir(CACHE_PORT_DIR):
             print(_("Directory with unpacked ports found, installing..."))
         else:
             print(_("Package unpacking error: directory not found."))
             exit(1)
         
-        # Проверка на наличие предыдуще
+        # Checking for a previous version of ports
         if os.path.isdir(PORTDIR):
             print(_("Found directory with previous ports version. Removed..."))
             shutil.rmtree(PORTDIR)
         else:
             print(_("No previous ports were found.")))
 
-        # Копирование
-        #shutil.copytree(CACHE_PORT_DIR, '/usr/ports')
+        # Copying
         shutil.copytree(PORT, '/usr/ports')
 
 #################
@@ -219,7 +228,7 @@ class Update(object):
 #################
 
 
-# Начальные проверки
+# Initial checks
 
 Other.printDbg("checkDirs\n")
 Other.checkDirs()
@@ -230,7 +239,7 @@ Update.checkInstalledPorts()
 Other.printDbg("checkArchiveCache\n")
 Update.checkArchiveCache()
 
-# Скачивание и установка
+# Download and install
 
 Other.printDbg("downloadPort\n")
 Update.downloadPort(args.tree)
@@ -241,7 +250,7 @@ Update.unpackPort()
 Other.printDbg("installPort\n")
 Update.installPort()
 
-# Конечные проверки
+# Final checks
 
 print(_("Checking for correct update...", end = ' '))
 if os.path.isdir(PORTDIR):
