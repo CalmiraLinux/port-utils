@@ -241,6 +241,7 @@ class PortFunctions(object):
     # mode - режим работы:
     #   exists     - проверка на существование файла
     #   non_exists - проверка на отсутствие файла
+    # TODO - добавление проверки на существование файла
     def checkDir(file, mode):
         if mode == "exists":
             if os.path.isdir(file):
