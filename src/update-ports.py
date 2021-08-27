@@ -155,6 +155,11 @@ class Update(object):
             ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/ports-lx4_1.1.txz")
         elif tree == "testing":
             ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/ports-lx4_1.1.txz")
+        elif tree == "list":
+            fp = open("/usr/share/update-ports/branches", "r")
+            print(*fp)
+            fp.close()
+
         else:
             print(_("Error! Branch {0} does not exist!", tree))
             exit(1)
