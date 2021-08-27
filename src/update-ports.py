@@ -30,6 +30,7 @@ from datetime import datetime
 import gettext
 
 ## Base Variables
+LOGFILE = "/var/log/update-ports.log"
 PORTDIR = "/usr/ports" # Ports directory
 CACHE = "/var/cache/ports" # Cache directory
 CACHE_FILE = CACHE + "/ports.txz" # Downloaded package with ports
@@ -62,6 +63,11 @@ parser.add_argument("--debug", "-d",
                     choices=["yes", "no"],
                     type=str, help="Displaying debug messages")
 
+# Clean
+parser.add_argument("--clear",
+                    choises=["cache", "log", "src", "all"]
+                    type=str, help="Cleaning the system from old ports files")
+
 args = parser.parse_args()
 
 ####################
@@ -80,7 +86,7 @@ class Other(object):
     def log_msg(message, status):
         f = open(LOGFILE, "a")
         for index in message:
-            f.write(index + '\n')
+            f.write(index)
 
     # Checking for the existence of required directories
     def checkDirs():
@@ -159,6 +165,7 @@ class Update(object):
             fp = open("/usr/share/update-ports/branches", "r")
             print(*fp)
             fp.close()
+
             exit(0)
 
         else:
@@ -227,6 +234,91 @@ class Update(object):
         # Copying
         shutil.copytree(PORT, '/usr/ports')
 
+# Другие функции для работы портов
+class PortFunctions(object):
+    # Проверка на существование нужного файла (для cleanSys)
+    # file - нужный файл
+    # mode - режим работы:
+    #   exists     - проверка на существование файла
+    #   non_exists - проверка на отсутствие файла
+    def checkDir(file, mode):
+        if mode == "exists":
+            if os.path.isdir(file):
+                print(_("Directory {0} is exist", file))
+                return(0)
+            else:
+                print(_("Error: the required directory {0} does not exist!", file))
+                return(1)
+
+        elif mode == "non_exists":
+            if os.path.isdir(file):
+                print(_("Directory: file {0} is exist!", file))
+                return(1)
+            else:
+                print(_("Directory {0} does not exist", file))
+                return(0)
+
+        else:
+            print(_("Error using checkFile: argument {0} for 'mode' does not exist!", mode))
+            exit(1)
+
+    # Очистка системы от лишних файлов
+    def cleanSys(mode):
+
+        if mode == "cache":
+            # Очистка кеша
+            print(_("Checking for cache existence..." end = " "))
+            if os.path.isdir(CACHE):
+                print(_("OK"))
+
+                shutil.rmtree(CACHE)
+                os.makedirs(CACHE)
+            else:
+                print(_("FAIL: Cache directory not found"))
+                exit(1)
+
+        elif mode == "log":
+            # Очистка логов
+            print(_("Checking for the existence of log files..." end = " "))
+            for FILE in LOGFILE, '/var/log/update-ports-dbg.log':
+                if os.path.isfile(FILE):
+                    print(_("File {0}: OK"))
+                    os.remove(FILE)
+                else:
+                    print(_("Error: the required file {0} does not exist!", FILE))
+                    exit(1)
+
+                # Проверка на корректное удаление
+                if os.path.isfile(FILE):
+                    print(_("Error: the required file {0} has not been deleted!"))
+                    exit(1)
+                else:
+                    print(_("File {0} has deleted succesfully!"))
+                    exit(0)
+
+        elif mode == "src":
+            # Очистка дерева исходных кодов
+            print(_("Checking for the existence of a source tree..." end = " "))
+            if PortFunctions.checkDir("/usr/src", "exists"):
+                pass
+            else:
+                exit(1)
+
+            shutil.rmtree("/usr/src")
+
+            # Проверка на корректное удаление
+            if PortFunctions.checkDir("/usr/src", "non_exists"):
+                pass
+            else:
+                print(_("Error: the required /usr/src has not been deleted!"))
+                exit(1)
+
+            os.mkdirs("/usr/src")
+
+            exit(0)
+
+
+
 #################
 ##             ##
 ## Script body ##
@@ -244,6 +336,13 @@ Update.checkInstalledPorts()
 
 Other.printDbg("checkArchiveCache\n")
 Update.checkArchiveCache()
+
+##
+
+if args.clean == "cache" or args.clean == "log" or args.clean == "src" or args.clean == "all":
+    PortFunctions.cleanSys(args.clean)
+    exit(0)
+
 
 # Download and install
 
