@@ -234,14 +234,15 @@ class Update(object):
         # Copying
         shutil.copytree(PORT, '/usr/ports')
 
-# Другие функции для работы портов
+# Other functions for ports
+# FIXME - updating translation into other languages
 class PortFunctions(object):
-    # Проверка на существование нужного файла (для cleanSys)
-    # file - нужный файл
-    # mode - режим работы:
-    #   exists     - проверка на существование файла
-    #   non_exists - проверка на отсутствие файла
-    # TODO - добавление проверки на существование файла
+    # Checking for the existence of the required file (for cleanSys)
+    # file - file;
+    # mode - work mode:
+    #   exists     - checking for file existence
+    #   non_exists - check for missing file
+    # FIXME - adding a check for file existence
     def checkDir(file, mode):
         if mode == "exists":
             if os.path.isdir(file):
