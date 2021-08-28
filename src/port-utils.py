@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# update-ports - Port system update program
+# port-utils - Port system software
 # Copyright (C) 2021 Michail Krasnov
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-# Project Page: http://github.com/CalmiraLinux/update-ports
+# Project Page: http://github.com/CalmiraLinux/port-utils
 # Michail Krasnov <linuxoid85@gmail.com>
 #
 
@@ -246,7 +246,7 @@ class Update(object):
         f.write(ufr.content) # Downloading
 
         f.close()
-        
+
         if os.path.isfile(CACHE_FILE):
             print(_("Downloaded successfully!"))
         else:
@@ -279,7 +279,7 @@ class Update(object):
         else:
             print(_("Package unpacking error. Package not found. It may not have been downloaded, or a third-party program changed it's name during unpacking."))
             exit(1)
-    
+
     # Installing the port
     def installPort():
         # Checking just in case
@@ -288,7 +288,7 @@ class Update(object):
         else:
             print(_("Package unpacking error: directory not found."))
             exit(1)
-        
+
         # Checking for a previous version of ports
         if os.path.isdir(PORTDIR):
             print(_("Found directory with previous ports version. Removed..."))
