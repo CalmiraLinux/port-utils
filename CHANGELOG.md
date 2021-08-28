@@ -5,6 +5,7 @@
 ## Testing
 
 * 28.08.2021 Михаил Краснов <linuxoid85@gmail.com>
+    * Обновление README;
     * Фикс ChangeLog, фикс парсера командной строки, добавление режимов работы функции `checkDirs()` ([#7](https://github.com/CalmiraLinux/update-ports/issues/7)), добавление функции для чтения новостей;
     * Фикс [#5](https://github.com/CalmiraLinux/update-ports/issues/5);
     * Добавление функции для чтения новостей и журнала изменений в портах, а так же фикс багов.
