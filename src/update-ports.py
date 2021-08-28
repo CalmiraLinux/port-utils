@@ -175,7 +175,7 @@ class Update(object):
         if tree == "stable":
             ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/ports-lx4_1.1.txz")
         elif tree == "testing":
-            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/ports-lx4_1.1.txz")
+            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/testing/ports-lx4_1.1.txz")
         elif tree == "list":
             fp = open("/usr/share/update-ports/branches", "r")
             print(*fp)
