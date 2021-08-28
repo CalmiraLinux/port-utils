@@ -120,7 +120,7 @@ class Window(object):
             label_second.pack()
 
             frame_third = tk.Frame()
-            label_third = tk.Label(master=frame_third, text="(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
+            label_third = tk.Label(master=frame_third, text="\n(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
             label_third.pack()
 
             frame_first.pack()
@@ -131,7 +131,7 @@ class Window(object):
 
         elif mode == "cli":
             print("About port-utils\nport-utils v0.1\nUtilities for download, update ports and check his changelog")
-            print("(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
+            print("\n(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
 
         else:
             print(_("Error: unknown operating mode "), mode)
