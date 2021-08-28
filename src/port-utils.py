@@ -33,6 +33,7 @@ from tkinter import *
 import tkinter as tk
 
 ## Base Variables
+NAME_VERSION="port-utils v0.2 DEV"
 LOGFILE = "/var/log/port-utils.log"
 PORTDIR = "/usr/ports" # Ports directory
 CACHE = "/var/cache/ports" # Cache directory
@@ -112,7 +113,7 @@ class Window(object):
             window.resizable(False, False)
 
             frame_first = tk.Frame()
-            label_first = tk.Label(master=frame_first, text="port-utils v0.1")
+            label_first = tk.Label(master=frame_first, text=NAME_VERSION)
             label_first.pack()
 
             frame_second = tk.Frame()
@@ -130,7 +131,8 @@ class Window(object):
             window.mainloop()
 
         elif mode == "cli":
-            print("About port-utils\nport-utils v0.1\nUtilities for download, update ports and check his changelog")
+            print("About port-utils\n\n", NAME_VERSION)
+            print("\nUtilities for download, update ports and check his changelog")
             print("\n(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
 
         else:
