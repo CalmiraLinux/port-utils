@@ -33,7 +33,7 @@ from tkinter import *
 import tkinter as tk
 
 ## Base Variables
-LOGFILE = "/var/log/update-ports.log"
+LOGFILE = "/var/log/port-utils.log"
 PORTDIR = "/usr/ports" # Ports directory
 CACHE = "/var/cache/ports" # Cache directory
 CACHE_FILE = CACHE + "/ports.txz" # Downloaded package with ports
@@ -41,8 +41,8 @@ CACHE_PORT_DIR = CACHE + "/ports" # Ports unpacked to cache
 PORT = CACHE_PORT_DIR + "/ports"  # Ports to install in /usr/ports
 
 ## getext
-gettext.bindtextdomain('update-ports', '/usr/share/locale')
-gettext.textdomain('update-ports')
+gettext.bindtextdomain('port-utils', '/usr/share/locale')
+gettext.textdomain('port-utils')
 _ = gettext.gettext
 
 # Проверка на запуск от root
@@ -64,7 +64,7 @@ if __name__ != "__main__":
 ##                      ##
 ##########################
 
-parser = argparse.ArgumentParser(description='update-ports - port system update program',
+parser = argparse.ArgumentParser(description='port-utils - Port system software',
                                  epilog="Good luck ;)")
 
 # Net branch
