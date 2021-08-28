@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-27 03:33+0300\n"
+"POT-Creation-Date: 2021-08-29 01:41+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,74 +17,189 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: update-ports.py:48
+#: port-utils.py:53
 msgid "Error: you must run this script as root!"
 msgstr ""
 
-#: update-ports.py:85
+#: port-utils.py:58
+msgid "The executable Port module must not be imported."
+msgstr ""
+
+#: port-utils.py:139
+msgid "Error: unknown operating mode "
+msgstr ""
+
+#: port-utils.py:160
 #, python-brace-format
 msgid "Directory {0} exists."
 msgstr ""
 
-#: update-ports.py:87
+#: port-utils.py:162
 msgid "Directory {} does not exist, creating a new one."
 msgstr ""
 
-#: update-ports.py:101
+#: port-utils.py:167
+msgid "Directory /var/cache/ports exists."
+msgstr ""
+
+#: port-utils.py:169
+msgid "Directory /var/cache/ports does not exist, creating a new one"
+msgstr ""
+
+#: port-utils.py:184
 msgid ""
 "Error: the file with distribution data does not exist, or there is no access "
 "to read it. Exit."
 msgstr ""
 
-#: update-ports.py:130
+#: port-utils.py:213
 msgid "The previous version of ports is installed. Removed..."
 msgstr ""
 
-#: update-ports.py:133 update-ports.py:209
+#: port-utils.py:216 port-utils.py:299
 msgid "No previous ports were found."
 msgstr ""
 
-#: update-ports.py:138
+#: port-utils.py:221
 msgid ""
 "The previous version of the archive with ports was found in the cache. "
 "Removed ..."
 msgstr ""
 
-#: update-ports.py:141
+#: port-utils.py:224
 msgid "No previous version of the ports system was found."
 msgstr ""
 
-#: update-ports.py:155
+#: port-utils.py:245 port-utils.py:398
 #, python-brace-format
 msgid "Error! Branch {0} does not exist!"
 msgstr ""
 
-#: update-ports.py:189
+#: port-utils.py:253
+msgid "Downloaded successfully!"
+msgstr ""
+
+#: port-utils.py:255
+msgid "The file has not been downloaded! Check internet access."
+msgstr ""
+
+#: port-utils.py:269
+msgid "Package unpacked successfully."
+msgstr ""
+
+#: port-utils.py:271
+msgid "Unknown error, crash."
+msgstr ""
+
+#: port-utils.py:275
+msgid "Package read error. Perhaps he is broken."
+msgstr ""
+
+#: port-utils.py:279
 msgid "Package unpacking error. The format is not supported."
 msgstr ""
 
-#: update-ports.py:192
+#: port-utils.py:282
 msgid ""
 "Package unpacking error. Package not found. It may not have been downloaded, "
 "or a third-party program changed it's name during unpacking."
 msgstr ""
 
-#: update-ports.py:199
+#: port-utils.py:289
 msgid "Directory with unpacked ports found, installing..."
 msgstr ""
 
-#: update-ports.py:201
+#: port-utils.py:291
 msgid "Package unpacking error: directory not found."
 msgstr ""
 
-#: update-ports.py:206
+#: port-utils.py:296
 msgid "Found directory with previous ports version. Removed..."
 msgstr ""
 
-#: update-ports.py:246
+#: port-utils.py:316
+#, python-brace-format
+msgid "Directory {0} is exist"
+msgstr ""
+
+#: port-utils.py:319
+#, python-brace-format
+msgid "Error: the required directory {0} does not exist!"
+msgstr ""
+
+#: port-utils.py:324
+#, python-brace-format
+msgid "Directory: file {0} is exist!"
+msgstr ""
+
+#: port-utils.py:327
+#, python-brace-format
+msgid "Directory {0} does not exist"
+msgstr ""
+
+#: port-utils.py:331
+#, python-brace-format
+msgid "Error using checkFile: argument {0} for 'mode' does not exist!"
+msgstr ""
+
+#: port-utils.py:338
+msgid "Checking for cache existence..."
+msgstr ""
+
+#: port-utils.py:340
+msgid "OK"
+msgstr ""
+
+#: port-utils.py:345
+msgid "FAIL: Cache directory not found"
+msgstr ""
+
+#: port-utils.py:350
+msgid "Checking for the existence of log files..."
+msgstr ""
+
+#: port-utils.py:353
+#, python-brace-format
+msgid "File {0}: OK"
+msgstr ""
+
+#: port-utils.py:356
+#, python-brace-format
+msgid "Error: the required file {0} does not exist!"
+msgstr ""
+
+#: port-utils.py:361
+#, python-brace-format
+msgid "Error: the required file {0} has not been deleted!"
+msgstr ""
+
+#: port-utils.py:364
+#, python-brace-format
+msgid "File {0} has deleted succesfully!"
+msgstr ""
+
+#: port-utils.py:369
+msgid "Checking for the existence of a source tree..."
+msgstr ""
+
+#: port-utils.py:381
+msgid "Error: the required /usr/src has not been deleted!"
+msgstr ""
+
+#: port-utils.py:407
+msgid "No such file /var/cache/ports/news.txt"
+msgstr ""
+
+#: port-utils.py:434
+msgid ""
+"Error: the update-ports version is not compatible with the current Calmira "
+"version!"
+msgstr ""
+
+#: port-utils.py:462
 msgid "Checking for correct update..."
 msgstr ""
 
-#: update-ports.py:251
+#: port-utils.py:467
 msgid "NOT FOUND! It is possible that something went wrong during the update."
 msgstr ""
