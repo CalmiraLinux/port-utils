@@ -85,6 +85,11 @@ parser.add_argument("--clear",
 parser.add_argument("--news",
                     choices=["stable", "testing"], help="Read news of ports")
 
+# About
+
+parser.add_argument("--about", "-a",
+                    choices=["gui", "cli"], type=str, help="About program")
+
 
 args = parser.parse_args()
 
@@ -93,6 +98,43 @@ args = parser.parse_args()
 ## Main functions ##
 ##                ##
 ####################
+
+# Window functions
+class Window(object):
+    # About window
+    def about(mode):
+        if mode == "gui":
+            window = tk.Tk()
+
+            window.title("About port-utils")
+            window.resizable(False, False)
+
+            frame_first = tk.Frame()
+            label_first = tk.Label(master=frame_first, text="port-utils v0.1")
+            label_first.pack()
+
+            frame_second = tk.Frame()
+            label_second = tk.Label(master=frame_second, text="Utilities for download, update ports and check his changelog")
+            label_second.pack()
+
+            frame_third = tk.Frame()
+            label_third = tk.Label(master=frame_third, text="(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
+            label_third.pack()
+
+            frame_first.pack()
+            frame_second.pack()
+            frame_third.pack()
+
+            window.mainloop()
+
+        elif mode == "cli":
+            print("About port-utils\nport-utils v0.1\nUtilities for download, update ports and check his changelog")
+            print("(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
+
+        else:
+            print(_("Error: unknown operating mode "), mode)
+            exit(1)
+
 
 # Other functions
 class Other(object):
@@ -128,8 +170,6 @@ class Other(object):
 
     # Receiving system data
     # TODO - use to download ports for a specific version of the distribution
-    # NOTE - currently not used, as it should be called after the release of
-    # Calmira LX4 1.2
     def getSystem():
         sysData = "/etc/calm-release"
 
@@ -423,3 +463,8 @@ elif (args.tree):
 
 elif (args.clear):
     PortFunctions.cleanSys(args.clear)
+    exit(0)
+
+elif (args.about):
+    Window.about(args.about)
+    exit(0)
