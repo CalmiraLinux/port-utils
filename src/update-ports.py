@@ -29,6 +29,8 @@ import requests
 from datetime import datetime
 import gettext
 import json
+from tkinter import *
+import tkinter as tk
 
 ## Base Variables
 LOGFILE = "/var/log/update-ports.log"
