@@ -68,7 +68,7 @@ parser = argparse.ArgumentParser(description='update-ports - port system update 
 # Net branch
 parser.add_argument("--tree", "-t",
                     choices=["stable", "testing"],
-                    required=True, type=str, help="Net branch from which ports are update")
+                    type=str, help="Net branch from which ports are update")
 
 # Debug mode
 parser.add_argument("--debug", "-d",
@@ -81,6 +81,9 @@ parser.add_argument("--clear",
                     type=str, help="Cleaning the system from old ports files")
 
 # Read news
+
+parser.add_argument("--news",
+                    choices=["stable", "testing"], help="Read news of ports")
 
 
 args = parser.parse_args()
@@ -104,13 +107,24 @@ class Other(object):
             f.write(index)
 
     # Checking for the existence of required directories
-    def checkDirs():
-        for DIR in "/var/cache/ports", "/usr/ports":
-            if os.path.isdir(DIR):
-                print(_("Directory {0} exists."), DIR)
+    def checkDirs(mode):
+        if mode == "tree":
+            for DIR in "/var/cache/ports", "/usr/ports":
+                if os.path.isdir(DIR):
+                    print(_("Directory {0} exists."), DIR)
+                else:
+                    print(_("Directory {} does not exist, creating a new one."), DIR)
+                    os.makedirs(DIR)
+
+        elif mode == "news":
+            if os.path.isdir("/var/cache/ports"):
+                print(_("Directory /var/cache/ports exists."))
             else:
-                print(_("Directory {} does not exist, creating a new one."), DIR)
-                os.makedirs(DIR)
+                print(_("Directory /var/cache/ports does not exist, creating a new one"))
+                os.makedirs("/var/cache/ports")
+        else:
+            exit(1)
+
 
     # Receiving system data
     # TODO - use to download ports for a specific version of the distribution
@@ -328,19 +342,26 @@ class PortFunctions(object):
             exit(0)
 
     # News reader
-    def checkNews(mode, tree):
+    def checkNews(tree):
         f = open(r'/var/cache/ports/news.txt', "wb")
 
         # Downloading
         if tree == "stable":
-            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/news.txt")
+            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/CHANGELOG.md")
         elif tree == "testing":
-            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/testing/news.txt")
+            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/testing/CHANGELOG.md")
         else:
             print(_("Error! Branch {0} does not exist!", tree))
             exit(1)
 
         f.write(ufr.content) # Downloading
+
+        try:
+            f = open("/var/cache/ports/news.txt", "r")
+
+        except FileNotFoundError:
+            print(_("No such file /var/cache/ports/news.txt"))
+            exit(1)
 
         print(*f)
 
@@ -354,12 +375,6 @@ class PortFunctions(object):
 
 
 # Initial checks
-
-Other.printDbg("checkDirs\n")
-Other.checkDirs()
-
-Other.printDbg("checkInstalledPorts\n")
-Update.checkInstalledPorts()
 
 Other.printDbg("checkArchiveCache\n")
 Update.checkArchiveCache()
@@ -375,23 +390,36 @@ if Other.getSystem() != "1.1":
     print(_("Error: the update-ports version is not compatible with the current Calmira version!"))
     exit(1)
 
-# Download and install
+if (args.news):
+    Other.checkDirs("news")
+    PortFunctions.checkNews(args.news)
 
-Other.printDbg("downloadPort\n")
-Update.downloadPort(args.tree)
+elif (args.tree):
+    Other.printDbg("checkDirs\n")
+    Other.checkDirs('tree')
 
-Other.printDbg("unpackPort\n")
-Update.unpackPort()
+    Other.printDbg("checkInstalledPorts\n")
+    Update.checkInstalledPorts()
+    # Download and install
 
-Other.printDbg("installPort\n")
-Update.installPort()
+    Other.printDbg("downloadPort\n")
+    Update.downloadPort(args.tree)
 
-# Final checks
+    Other.printDbg("unpackPort\n")
+    Update.unpackPort()
 
-print(_("Checking for correct update..."), end = ' ')
-if os.path.isdir(PORTDIR):
-    print("ОК")
-    exit(0)
-else:
-    print(_("NOT FOUND! It is possible that something went wrong during the update."))
-    exit(1)
+    Other.printDbg("installPort\n")
+    Update.installPort()
+
+    # Final checks
+
+    print(_("Checking for correct update..."), end = ' ')
+    if os.path.isdir(PORTDIR):
+        print("ОК")
+        exit(0)
+    else:
+        print(_("NOT FOUND! It is possible that something went wrong during the update."))
+        exit(1)
+
+elif (args.clear):
+    PortFunctions.cleanSys(args.clear)
