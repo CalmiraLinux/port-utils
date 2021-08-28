@@ -28,6 +28,7 @@ import tarfile
 import requests
 from datetime import datetime
 import gettext
+import json
 
 ## Base Variables
 LOGFILE = "/var/log/update-ports.log"
@@ -49,9 +50,20 @@ if GID != 0:
     print(_("Error: you must run this script as root!"))
     exit(1)
 
-# Command line parsing
+# Проверка на импортирование
+if __name__ != "__main__":
+    print(_("The executable Port module must not be imported."))
+    sys.exit(1)
 
-parser = argparse.ArgumentParser(description='update-ports - port system update program')
+
+##########################
+##                      ##
+## Command line parsing ##
+##                      ##
+##########################
+
+parser = argparse.ArgumentParser(description='update-ports - port system update program',
+                                 epilog="Good luck ;)")
 
 # Net branch
 parser.add_argument("--tree", "-t",
@@ -65,8 +77,11 @@ parser.add_argument("--debug", "-d",
 
 # Clean
 parser.add_argument("--clear",
-                    choises=["cache", "log", "src", "all"]
+                    choices=["cache", "log", "src", "all"],
                     type=str, help="Cleaning the system from old ports files")
+
+# Read news
+
 
 args = parser.parse_args()
 
@@ -92,9 +107,9 @@ class Other(object):
     def checkDirs():
         for DIR in "/var/cache/ports", "/usr/ports":
             if os.path.isdir(DIR):
-                print(_("Directory {0} exists.", DIR))
+                print(_("Directory {0} exists."), DIR)
             else:
-                print(_("Directory {} does not exist, creating a new one.", DIR))
+                print(_("Directory {} does not exist, creating a new one."), DIR)
                 os.makedirs(DIR)
 
     # Receiving system data
@@ -105,9 +120,9 @@ class Other(object):
         sysData = "/etc/calm-release"
 
         if os.path.isfile(sysData):
-            log_msg("system data : OK", "OK")
+            Other.log_msg("system data : OK", "OK")
         else:
-            log_msg("system data : FAIL", "EMERG")
+            Other.log_msg("system data : FAIL", "EMERG")
             print(_("Error: the file with distribution data does not exist, or there is no access to read it. Exit."))
             exit(1)
 
@@ -211,12 +226,6 @@ class Update(object):
     
     # Installing the port
     def installPort():
-        # Check for compatibility with Calmira
-        if getSystem() != "1.1":
-            print(_("Error: the update-ports version is not compatible with the current Calmira version!"))
-            exit(1)
-
-
         # Checking just in case
         if os.path.isdir(CACHE_PORT_DIR):
             print(_("Directory with unpacked ports found, installing..."))
@@ -229,7 +238,7 @@ class Update(object):
             print(_("Found directory with previous ports version. Removed..."))
             shutil.rmtree(PORTDIR)
         else:
-            print(_("No previous ports were found.")))
+            print(_("No previous ports were found."))
 
         # Copying
         shutil.copytree(PORT, '/usr/ports')
@@ -264,12 +273,11 @@ class PortFunctions(object):
             print(_("Error using checkFile: argument {0} for 'mode' does not exist!", mode))
             exit(1)
 
-    # Очистка системы от лишних файлов
+    # Cleaning the system from unnecessary files
     def cleanSys(mode):
-
         if mode == "cache":
             # Очистка кеша
-            print(_("Checking for cache existence..." end = " "))
+            print(_("Checking for cache existence...", end = " "))
             if os.path.isdir(CACHE):
                 print(_("OK"))
 
@@ -281,7 +289,7 @@ class PortFunctions(object):
 
         elif mode == "log":
             # Очистка логов
-            print(_("Checking for the existence of log files..." end = " "))
+            print(_("Checking for the existence of log files...", end = " "))
             for FILE in LOGFILE, '/var/log/update-ports-dbg.log':
                 if os.path.isfile(FILE):
                     print(_("File {0}: OK"))
@@ -300,7 +308,7 @@ class PortFunctions(object):
 
         elif mode == "src":
             # Очистка дерева исходных кодов
-            print(_("Checking for the existence of a source tree..." end = " "))
+            print(_("Checking for the existence of a source tree...", end = " "))
             if PortFunctions.checkDir("/usr/src", "exists"):
                 pass
             else:
@@ -318,6 +326,23 @@ class PortFunctions(object):
             os.mkdirs("/usr/src")
 
             exit(0)
+
+    # News reader
+    def checkNews(mode, tree):
+        f = open(r'/var/cache/ports/news.txt', "wb")
+
+        # Downloading
+        if tree == "stable":
+            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/news.txt")
+        elif tree == "testing":
+            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/testing/news.txt")
+        else:
+            print(_("Error! Branch {0} does not exist!", tree))
+            exit(1)
+
+        f.write(ufr.content) # Downloading
+
+        print(*f)
 
 
 
@@ -341,10 +366,14 @@ Update.checkArchiveCache()
 
 ##
 
-if args.clean == "cache" or args.clean == "log" or args.clean == "src" or args.clean == "all":
-    PortFunctions.cleanSys(args.clean)
-    exit(0)
+#if args.clean == "cache" or args.clean == "log" or args.clean == "src" or args.clean == "all":
+#    PortFunctions.cleanSys(args.clean)
+#    exit(0)
 
+# Check for compatibility with Calmira
+if Other.getSystem() != "1.1":
+    print(_("Error: the update-ports version is not compatible with the current Calmira version!"))
+    exit(1)
 
 # Download and install
 
@@ -359,7 +388,7 @@ Update.installPort()
 
 # Final checks
 
-print(_("Checking for correct update...", end = ' '))
+print(_("Checking for correct update..."), end = ' ')
 if os.path.isdir(PORTDIR):
     print("ОК")
     exit(0)
