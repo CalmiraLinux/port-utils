@@ -33,6 +33,7 @@ from tkinter import *
 import tkinter as tk
 
 ## Base Variables
+NAME_VERSION="port-utils v0.2 DEV"
 LOGFILE = "/var/log/port-utils.log"
 PORTDIR = "/usr/ports" # Ports directory
 CACHE = "/var/cache/ports" # Cache directory
@@ -112,7 +113,7 @@ class Window(object):
             window.resizable(False, False)
 
             frame_first = tk.Frame()
-            label_first = tk.Label(master=frame_first, text="port-utils v0.1")
+            label_first = tk.Label(master=frame_first, text=NAME_VERSION)
             label_first.pack()
 
             frame_second = tk.Frame()
@@ -130,7 +131,8 @@ class Window(object):
             window.mainloop()
 
         elif mode == "cli":
-            print("About port-utils\nport-utils v0.1\nUtilities for download, update ports and check his changelog")
+            print("About port-utils\n\n", NAME_VERSION)
+            print("\nUtilities for download, update ports and check his changelog")
             print("\n(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
 
         else:
@@ -240,7 +242,7 @@ class Update(object):
             exit(0)
 
         else:
-            print(_("Error! Branch {0} does not exist!", tree))
+            print(_("Error! Branch {0} does not exist!"), tree)
             exit(1)
 
         f.write(ufr.content) # Downloading
@@ -311,29 +313,29 @@ class PortFunctions(object):
     def checkDir(file, mode):
         if mode == "exists":
             if os.path.isdir(file):
-                print(_("Directory {0} is exist", file))
+                print(_("Directory {0} is exist"), file)
                 return(0)
             else:
-                print(_("Error: the required directory {0} does not exist!", file))
+                print(_("Error: the required directory {0} does not exist!"), file)
                 return(1)
 
         elif mode == "non_exists":
             if os.path.isdir(file):
-                print(_("Directory: file {0} is exist!", file))
+                print(_("Directory: file {0} is exist!"), file)
                 return(1)
             else:
-                print(_("Directory {0} does not exist", file))
+                print(_("Directory {0} does not exist"), file)
                 return(0)
 
         else:
-            print(_("Error using checkFile: argument {0} for 'mode' does not exist!", mode))
+            print(_("Error using checkFile: argument {0} for 'mode' does not exist!"), mode)
             exit(1)
 
     # Cleaning the system from unnecessary files
     def cleanSys(mode):
         if mode == "cache":
             # Очистка кеша
-            print(_("Checking for cache existence...", end = " "))
+            print(_("Checking for cache existence..."), end = " ")
             if os.path.isdir(CACHE):
                 print(_("OK"))
 
@@ -345,13 +347,13 @@ class PortFunctions(object):
 
         elif mode == "log":
             # Очистка логов
-            print(_("Checking for the existence of log files...", end = " "))
+            print(_("Checking for the existence of log files..."), end = " ")
             for FILE in LOGFILE, '/var/log/update-ports-dbg.log':
                 if os.path.isfile(FILE):
                     print(_("File {0}: OK"))
                     os.remove(FILE)
                 else:
-                    print(_("Error: the required file {0} does not exist!", FILE))
+                    print(_("Error: the required file {0} does not exist!"), FILE)
                     exit(1)
 
                 # Проверка на корректное удаление
@@ -364,7 +366,7 @@ class PortFunctions(object):
 
         elif mode == "src":
             # Очистка дерева исходных кодов
-            print(_("Checking for the existence of a source tree...", end = " "))
+            print(_("Checking for the existence of a source tree..."), end = " ")
             if PortFunctions.checkDir("/usr/src", "exists"):
                 pass
             else:
@@ -393,7 +395,7 @@ class PortFunctions(object):
         elif tree == "testing":
             ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/testing/CHANGELOG.md")
         else:
-            print(_("Error! Branch {0} does not exist!", tree))
+            print(_("Error! Branch {0} does not exist!"), tree)
             exit(1)
 
         f.write(ufr.content) # Downloading
@@ -432,6 +434,7 @@ if Other.getSystem() != "1.1":
     print(_("Error: the update-ports version is not compatible with the current Calmira version!"))
     exit(1)
 
+# Command line parsing (2)
 if (args.news):
     Other.checkDirs("news")
     PortFunctions.checkNews(args.news)
@@ -442,6 +445,7 @@ elif (args.tree):
 
     Other.printDbg("checkInstalledPorts\n")
     Update.checkInstalledPorts()
+
     # Download and install
 
     Other.printDbg("downloadPort\n")
