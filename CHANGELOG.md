@@ -4,6 +4,9 @@
 
 ## port-utils 0.2
 
+* 29.08.2021 Михаил Краснов <linuxoid85@gmail.com>
+    * Мелкие изменения в скрипте и добавление обзорной документации.
+    
 * 28.08.2021 Михаил Краснов <linuxoid85@gmail.com>
     * Фикс [#11](https://github.com/CalmiraLinux/port-utils/issues/11);
     * Фикс [#10](https://github.com/CalmiraLinux/port-utils/issues/10);

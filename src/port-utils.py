@@ -70,6 +70,14 @@ parser.add_argument("--tree", "-t",
                     choices=["stable", "testing"],
                     type=str, help="Net branch from which ports are update")
 
+# Read news
+parser.add_argument("--news",
+                    choices=["stable", "testing"], help="Read news of ports")
+
+# Install documentation
+parser.add_argument("--doc",
+                    choices=["stable", "testing"], help="Download Calmira and Ports System documentation")
+
 # Debug mode
 parser.add_argument("--debug", "-d",
                     choices=["yes", "no"],
@@ -79,13 +87,6 @@ parser.add_argument("--debug", "-d",
 parser.add_argument("--clear",
                     choices=["cache", "log", "src", "all"],
                     type=str, help="Cleaning the system from old ports files")
-
-# Read news
-parser.add_argument("--news",
-                    choices=["stable", "testing"], help="Read news of ports")
-
-# Install documentation
-parser.add_argument("--doc", help="Download Calmira and Ports System documentation")
 
 # About
 parser.add_argument("--about", "-a",
@@ -104,6 +105,8 @@ args = parser.parse_args()
 class Window(object):
     # About window
     def about(mode):
+        about_text = "Utilities for download, update ports and check his changelog"
+
         if mode == "gui":
             window = tk.Tk()
 
@@ -115,7 +118,7 @@ class Window(object):
             label_first.pack()
 
             frame_second = tk.Frame()
-            label_second = tk.Label(master=frame_second, text="Utilities for download, update ports and check his changelog")
+            label_second = tk.Label(master=frame_second, text=about_text)
             label_second.pack()
 
             frame_third = tk.Frame()
@@ -130,7 +133,7 @@ class Window(object):
 
         elif mode == "cli":
             print("About port-utils\n\n", NAME_VERSION)
-            print("\nUtilities for download, update ports and check his changelog")
+            print("\n", about_text)
             print("\n(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
 
         else:
