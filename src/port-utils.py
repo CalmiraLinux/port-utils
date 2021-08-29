@@ -46,13 +46,6 @@ gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
 _ = gettext.gettext
 
-# Проверка на запуск от root
-GID = os.getgid()
-
-if GID != 0:
-    print(_("Error: you must run this script as root!"))
-    exit(1)
-
 # Проверка на импортирование
 if __name__ != "__main__":
     print(_("The executable Port module must not be imported."))
@@ -142,15 +135,37 @@ class Window(object):
 
 # Other functions
 class Other(object):
+    # Checking to run a function as root
+    def getRoot(mode):
+        GID = os.getgid()
+        if mode == "check":
+            if GID != 0:
+                print(_("Error: you must run this script as root!"))
+                exit(1)
+
+        elif mode == "return":
+            if GID != 0:
+                return(1)
+            else:
+                return(0)
+
+        else:
+            print(_("Uknown option 'getRoot()' for 'mode'!"))
+            exit(1)
+
     # Getting the current date and time
     def getDate():
         return datetime.fromtimestamp(1576280665)
 
     # Logging
     def log_msg(message, status):
-        f = open(LOGFILE, "a")
-        for index in message:
-            f.write(index)
+        if Other.getRoot("return"):
+            f = open(LOGFILE, "a")
+            for index in message:
+                f.write(index)
+
+        else:
+            pass
 
     # Checking for the existence of required directories
     def checkDirs(mode):
@@ -178,9 +193,8 @@ class Other(object):
         sysData = "/etc/calm-release"
 
         if os.path.isfile(sysData):
-            Other.log_msg("system data : OK", "OK")
+            pass
         else:
-            Other.log_msg("system data : FAIL", "EMERG")
             print(_("Error: the file with distribution data does not exist, or there is no access to read it. Exit."))
             exit(1)
 
@@ -417,12 +431,6 @@ class PortFunctions(object):
 ##             ##
 #################
 
-
-# Initial checks
-
-Other.printDbg("checkArchiveCache\n")
-Update.checkArchiveCache()
-
 ##
 
 #if args.clean == "cache" or args.clean == "log" or args.clean == "src" or args.clean == "all":
@@ -436,18 +444,28 @@ if Other.getSystem() != "1.1":
 
 # Command line parsing (2)
 if (args.news):
+    # Initial checks
+    Other.getRoot("check")
+    Other.printDbg("checkArchiveCache\n")
+    Update.checkArchiveCache()
+
+    # Get change logs
     Other.checkDirs("news")
     PortFunctions.checkNews(args.news)
 
 elif (args.tree):
+    # Initial checks
+    Other.getRoot("check")
     Other.printDbg("checkDirs\n")
     Other.checkDirs('tree')
+
+    Other.printDbg("checkArchiveCache\n")
+    Update.checkArchiveCache()
 
     Other.printDbg("checkInstalledPorts\n")
     Update.checkInstalledPorts()
 
     # Download and install
-
     Other.printDbg("downloadPort\n")
     Update.downloadPort(args.tree)
 
@@ -458,7 +476,6 @@ elif (args.tree):
     Update.installPort()
 
     # Final checks
-
     print(_("Checking for correct update..."), end = ' ')
     if os.path.isdir(PORTDIR):
         print("ОК")
@@ -468,6 +485,13 @@ elif (args.tree):
         exit(1)
 
 elif (args.clear):
+    # Initial checks
+    Other.getRoot("check")
+    Other.printDbg("checkArchiveCache\n")
+
+    Update.checkArchiveCache()
+
+    # Clean the system
     PortFunctions.cleanSys(args.clear)
     exit(0)
 

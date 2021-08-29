@@ -5,6 +5,7 @@
 ## port-utils 0.2
 
 * 28.08.2021 Михаил Краснов <linuxoid85@gmail.com>
+    * Фикс [#10](https://github.com/CalmiraLinux/port-utils/issues/10);
     * Фикс операторов `print` при использовании `gettext`;
     * Добавление переменной с версией программы;
     * Актуализация README;

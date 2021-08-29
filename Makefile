@@ -5,7 +5,7 @@ install:
 
 
 	msgfmt src/locales/ru.po
-	cp -v src/locales/ru.po   /usr/share/locale/ru/port-utils.mo
+	cp -v src/locales/ru.po   /usr/share/locale/ru_RU/LC_MESSAGES/
 	cp -v src/docs/branches   /usr/share/update-ports/branches
 	cp -v src/port-utils.py /usr/bin/port-utils
 
