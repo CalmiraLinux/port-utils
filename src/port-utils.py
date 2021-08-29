@@ -26,22 +26,26 @@ import argparse
 import shutil
 import tarfile
 import requests
-from datetime import datetime
 import gettext
 import json
+from datetime import datetime
 from tkinter import *
 import tkinter as tk
 
-## Base Variables
+## Base Constants
 NAME_VERSION="port-utils v0.2 DEV"
 LOGFILE = "/var/log/port-utils.log"
-PORTDIR = "/usr/ports" # Ports directory
-CACHE = "/var/cache/ports" # Cache directory
+PORTDIR = "/usr/ports"            # Ports directory
+DOCDIR = "/usr/share/doc/Calmira"
+CACHE = "/var/cache/ports"        # Cache directory
 CACHE_FILE = CACHE + "/ports.txz" # Downloaded package with ports
+CACHE_DOC_FILE = CACHE + "/docs.txz" # Downloaded package with documentation
 CACHE_PORT_DIR = CACHE + "/ports" # Ports unpacked to cache
+CACHE_DOC_DIR = CACHE + "/docs"   # Documentation unpacked to cache
 PORT = CACHE_PORT_DIR + "/ports"  # Ports to install in /usr/ports
+DOC = CACHE_DOC_DIR + "/docs"
 
-## getext
+# FIXME - getext
 gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
 _ = gettext.gettext
@@ -77,12 +81,13 @@ parser.add_argument("--clear",
                     type=str, help="Cleaning the system from old ports files")
 
 # Read news
-
 parser.add_argument("--news",
                     choices=["stable", "testing"], help="Read news of ports")
 
-# About
+# Install documentation
+parser.add_argument("--doc", help="Download Calmira and Ports System documentation")
 
+# About
 parser.add_argument("--about", "-a",
                     choices=["gui", "cli"], type=str, help="About program")
 
@@ -269,17 +274,27 @@ class Update(object):
             print(_("The file has not been downloaded! Check internet access."))
             exit(1)
 
-
     # Unpacking the port
-    def unpackPort():
-        if os.path.isfile(CACHE_FILE):
-            try:
-                t = tarfile.open(CACHE_FILE, 'r')
+    def unpackPkg(mode):
+        if mode == "port":
+            cache_file = CACHE_FILE
+            cache_dir = CACHE_PORT_DIR
+        elif mode == "doc":
+            cache_file = CACHE_DOC_FILE
+            cache_dir = CACHE_DOC_DIR
+        else:
+            print(_("Error: uknown option for 'unpackPkg'!"))
+            exit(1)
 
-                t.extractall(path=CACHE_PORT_DIR)
+
+        if os.path.isfile(cache_file):
+            try:
+                t = tarfile.open(cache_file, 'r')
+
+                t.extractall(path=cache_dir)
 
                 # Checking for an unpacked directory
-                if os.path.isdir(CACHE_PORT_DIR):
+                if os.path.isdir(cache_dir):
                     print(_("Package unpacked successfully."))
                 else:
                     print(_("Unknown error, crash."))
@@ -297,26 +312,40 @@ class Update(object):
             exit(1)
 
     # Installing the port
-    def installPort():
+    def installPkg(mode):
+        # Выбор нужных файлов
+        if mode == "port":
+            cache_dir = CACHE_PORT_DIR # Unpacked dir
+            prefix_dir = PORTDIR # Куда распаковать
+            target_file = PORT # Что распаковать
+            target_dir = '/usr/ports' # Куда скопировать
+        elif mode == "doc":
+            cache_dir = CACHE_DOC_DIR # Unpacked dir
+            prefix_dir = DOCDIR # Куда распаковать
+            target_file = DOC # Что распаковать
+            target_dir = DOCDIR # Куда скопировать
+        else:
+            print(_("Error: uknown option for 'installPkg'!"))
+            exit(1)
+
         # Checking just in case
-        if os.path.isdir(CACHE_PORT_DIR):
-            print(_("Directory with unpacked ports found, installing..."))
+        if os.path.isdir(cache_dir):
+            print(_("Directory with unpacked ports/documentation found, installing..."))
         else:
             print(_("Package unpacking error: directory not found."))
             exit(1)
 
         # Checking for a previous version of ports
-        if os.path.isdir(PORTDIR):
-            print(_("Found directory with previous ports version. Removed..."))
-            shutil.rmtree(PORTDIR)
+        if os.path.isdir(prefix_dir):
+            print(_("Found directory with previous ports/documentation version. Removed..."))
+            shutil.rmtree(prefix_dir)
         else:
-            print(_("No previous ports were found."))
+            print(_("No previous ports/documentation were found."))
 
         # Copying
-        shutil.copytree(PORT, '/usr/ports')
+        shutil.copytree(target_file, target_dir)
 
 # Other functions for ports
-# FIXME - updating translation into other languages
 class PortFunctions(object):
     # Checking for the existence of the required file (for cleanSys)
     # file - file;
@@ -431,12 +460,6 @@ class PortFunctions(object):
 ##             ##
 #################
 
-##
-
-#if args.clean == "cache" or args.clean == "log" or args.clean == "src" or args.clean == "all":
-#    PortFunctions.cleanSys(args.clean)
-#    exit(0)
-
 # Check for compatibility with Calmira
 if Other.getSystem() != "1.1":
     print(_("Error: the update-ports version is not compatible with the current Calmira version!"))
@@ -470,10 +493,10 @@ elif (args.tree):
     Update.downloadPort(args.tree)
 
     Other.printDbg("unpackPort\n")
-    Update.unpackPort()
+    Update.unpackPkg("port")
 
     Other.printDbg("installPort\n")
-    Update.installPort()
+    Update.installPkg("port")
 
     # Final checks
     print(_("Checking for correct update..."), end = ' ')
@@ -483,6 +506,16 @@ elif (args.tree):
     else:
         print(_("NOT FOUND! It is possible that something went wrong during the update."))
         exit(1)
+
+elif (args.doc):
+    Other.getRoot("check")
+    Other.checkDirs("tree")
+
+    Update.checkArchiveCache()
+
+    Update.downloadPort(args.doc)
+    Update.unpackPkg("doc")
+    Update.installPkg("doc")
 
 elif (args.clear):
     # Initial checks
