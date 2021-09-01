@@ -357,25 +357,24 @@ class PortFunctions(object):
     #   non_exists - check for missing file
     # FIXME - adding a check for file existence
     def checkDir(file, mode):
+        # Выбор режима работы
         if mode == "exists":
-            if os.path.isdir(file):
-                print(_("Directory {0} is exist"), file)
-                return(0)
-            else:
-                print(_("Error: the required directory {0} does not exist!"), file)
-                return(1)
-
-        elif mode == "non_exists":
-            if os.path.isdir(file):
-                print(_("Directory: file {0} is exist!"), file)
-                return(1)
-            else:
-                print(_("Directory {0} does not exist"), file)
-                return(0)
-
+            returnVar = 0   # В случае наличия
+            returnUnVar = 1 # В случае отсутствия
+        elif mode == "non_exests":
+            returnVar = 1   # В случае наличия
+            returnUnVar = 0 # В случае отсутствия
         else:
             print(_("Error using checkFile: argument {0} for 'mode' does not exist!"), mode)
             exit(1)
+    	
+    	# Проверка
+    	if os.path.isdir(file):
+    	    print(_("Directory {0} is exist"), file)
+    	    return(returnVar)
+    	else:
+    	    print(_("Directory {0} does not exist"), file)
+    	    return(returnUnVar)
 
     # Cleaning the system from unnecessary files
     def cleanSys(mode):
@@ -435,16 +434,20 @@ class PortFunctions(object):
     def checkNews(tree):
         f = open(r'/var/cache/ports/news.txt', "wb")
 
-        # Downloading
+        # Выбор режима работы
         if tree == "stable":
-            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/CHANGELOG.md")
+            pass
         elif tree == "testing":
-            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/testing/CHANGELOG.md")
+            pass
         else:
             print(_("Error! Branch {0} does not exist!"), tree)
             exit(1)
-
-        f.write(ufr.content) # Downloading
+        
+        # Downloading
+        branch = "https://raw.githubusercontent.com/CalmiraLinux/Ports/" + tree + "/CHANGELOG.md" # Что скачивать
+        
+        ufr = requests.get(branch)
+        f.write(ufr.content)
 
         try:
             f = open("/var/cache/ports/news.txt", "r")
