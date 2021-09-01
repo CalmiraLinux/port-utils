@@ -367,14 +367,14 @@ class PortFunctions(object):
         else:
             print(_("Error using checkFile: argument {0} for 'mode' does not exist!"), mode)
             exit(1)
-    	
-    	# Проверка
-    	if os.path.isdir(file):
-    	    print(_("Directory {0} is exist"), file)
-    	    return(returnVar)
-    	else:
-    	    print(_("Directory {0} does not exist"), file)
-    	    return(returnUnVar)
+
+        # Проверка
+        if os.path.isdir(file):
+            print(_("Directory {0} is exist"), file)
+            return(returnVar)
+        else:
+            print(_("Directory {0} does not exist"), file)
+            return(returnUnVar)
 
     # Cleaning the system from unnecessary files
     def cleanSys(mode):
