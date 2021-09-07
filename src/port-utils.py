@@ -22,6 +22,7 @@
 #
 
 import os
+import sys
 import argparse
 import shutil
 import tarfile
@@ -35,15 +36,23 @@ import tkinter as tk
 ## Base Constants
 NAME_VERSION="port-utils v0.2 DEV"
 LOGFILE = "/var/log/port-utils.log"
-PORTDIR = "/usr/ports"            # Ports directory
-DOCDIR = "/usr/share/doc/Calmira"
-CACHE = "/var/cache/ports"        # Cache directory
-CACHE_FILE = CACHE + "/ports.txz" # Downloaded package with ports
+PORTDIR = "/usr/ports"               # Ports directory
+FILES_DIR = "/usr/share/ports"       # Files directory
+MODULES_DIR = FILES_DIR + "/modules" # Modules directory
+DOCDIR = "/usr/share/doc/Calmira"    # Documents dir
+CACHE = "/var/cache/ports"           # Cache directory
+CACHE_FILE = CACHE + "/ports.txz"    # Downloaded package with ports
 CACHE_DOC_FILE = CACHE + "/docs.txz" # Downloaded package with documentation
-CACHE_PORT_DIR = CACHE + "/ports" # Ports unpacked to cache
-CACHE_DOC_DIR = CACHE + "/docs"   # Documentation unpacked to cache
-PORT = CACHE_PORT_DIR + "/ports"  # Ports to install in /usr/ports
+CACHE_PORT_DIR = CACHE + "/ports"    # Ports unpacked to cache
+CACHE_DOC_DIR = CACHE + "/docs"      # Documentation unpacked to cache
+PORT = CACHE_PORT_DIR + "/ports"     # Ports to install in /usr/ports
 DOC = CACHE_DOC_DIR + "/docs"
+
+sys.path.append(MODULES_DIR)
+#import core-functions
+
+# TODO - закончить функцию для скачивания файла downloadPkg - добавить
+# скачивание документации
 
 # FIXME - getext
 gettext.bindtextdomain('port-utils', '/usr/share/locale')
@@ -148,7 +157,7 @@ class Other(object):
         GID = os.getgid()
         if mode == "check":
             if GID != 0:
-                print(_("Error: you must run this script as root!"))
+                print(_("\033[31mError: you must run this script as root!\033[0m"))
                 exit(1)
 
         elif mode == "return":
@@ -247,15 +256,37 @@ class Update(object):
 
 
     # Downloading the port from repositories
-    def downloadPort(tree):
-        f = open(r'/var/cache/ports/ports.txz',"wb")
+    def downloadPkg(tree, mode):
+        print(_("Job selection..."), end = " ")
+
+        if mode == "port":
+            print(_("Port download..."), end = " ")
+
+            f = open(r'/var/cache/ports/ports.txz',"wb")
+            # Ссылка для скачивания стабильной версии портов
+            stable_link = "https://raw.githubusercontent.com/CalmiraLinux/Ports/main/ports-lx4_1.1.txz"
+            # Ссылка для скачивания портов из тестингов
+            unstable_link = "https://raw.githubusercontent.com/CalmiraLinux/Ports/testing/ports-lx4_1.1.txz"
+
+        elif mode == "doc":
+            print(_("Documentation download..."), end = " ")
+
+            f = open(r'/var/cache/ports/docs.txz', "wb")
+            # Ссылка для скачивания стабильной версии документации
+            stable_link = "https://raw.githubusercontent.com/CalmiraLinux/CalmiraLinux/lx4/v1.1/docs/archives/docs.txz"
+            # Ссылка для скачивания нестабильной версии документации
+            # NOTE - на данный момент поддерживается только одна ветка.
+            unstable_link = stable_link
+            # Изменение значения переменной (для тестирования)
+            CACHE_FILE = CACHE + "/docs.txz"
+
 
         # Downloading
         # Currently the 'stable' and 'testing' branches are supported
         if tree == "stable":
-            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/main/ports-lx4_1.1.txz")
+            ufr = requests.get(stable_link)
         elif tree == "testing":
-            ufr = requests.get("https://raw.githubusercontent.com/CalmiraLinux/Ports/testing/ports-lx4_1.1.txz")
+            ufr = requests.get(unstable_link)
         elif tree == "list":
             fp = open("/usr/share/update-ports/branches", "r")
             print(*fp)
@@ -351,17 +382,17 @@ class Update(object):
 # Other functions for ports
 class PortFunctions(object):
     # Checking for the existence of the required file (for cleanSys)
-    # file - file;
+    # file - check file;
     # mode - work mode:
     #   exists     - checking for file existence
     #   non_exists - check for missing file
-    # FIXME - adding a check for file existence
+    # TODO - adding a check for file existence
     def checkDir(file, mode):
         # Выбор режима работы
         if mode == "exists":
             returnVar = 0   # В случае наличия
             returnUnVar = 1 # В случае отсутствия
-        elif mode == "non_exests":
+        elif mode == "non_exists":
             returnVar = 1   # В случае наличия
             returnUnVar = 0 # В случае отсутствия
         else:
@@ -468,13 +499,14 @@ class PortFunctions(object):
 
 # Check for compatibility with Calmira
 if Other.getSystem() != "1.1":
-    print(_("Error: the update-ports version is not compatible with the current Calmira version!"))
+    print(_("\033[31mError: the update-ports version is not compatible with the current Calmira version!\033[0m"))
     exit(1)
+
+Other.getRoot("check")
 
 # Command line parsing (2)
 if (args.news):
     # Initial checks
-    Other.getRoot("check")
     Other.printDbg("checkArchiveCache\n")
     Update.checkArchiveCache()
 
@@ -484,7 +516,6 @@ if (args.news):
 
 elif (args.tree):
     # Initial checks
-    Other.getRoot("check")
     Other.printDbg("checkDirs\n")
     Other.checkDirs('tree')
 
@@ -496,7 +527,7 @@ elif (args.tree):
 
     # Download and install
     Other.printDbg("downloadPort\n")
-    Update.downloadPort(args.tree)
+    Update.downloadPkg(args.tree, "port")
 
     Other.printDbg("unpackPort\n")
     Update.unpackPkg("port")
@@ -514,18 +545,15 @@ elif (args.tree):
         exit(1)
 
 elif (args.doc):
-    Other.getRoot("check")
     Other.checkDirs("tree")
 
     Update.checkArchiveCache()
 
-    Update.downloadPort(args.doc)
+    Update.downloadPkg(args.doc, "doc")
     Update.unpackPkg("doc")
     Update.installPkg("doc")
 
 elif (args.clear):
-    # Initial checks
-    Other.getRoot("check")
     Other.printDbg("checkArchiveCache\n")
 
     Update.checkArchiveCache()
