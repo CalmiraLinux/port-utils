@@ -467,15 +467,17 @@ class PortFunctions(object):
 
         # Выбор режима работы
         if tree == "stable":
-            pass
+            file_branch = "main"
+
         elif tree == "testing":
-            pass
+            file_branch = tree
+
         else:
-            print(_("Error! Branch {0} does not exist!"), tree)
+            print(_("Error! Branch {} does not exist!").format(tree))
             exit(1)
         
         # Downloading
-        branch = "https://raw.githubusercontent.com/CalmiraLinux/Ports/" + tree + "/CHANGELOG.md" # Что скачивать
+        branch = "https://raw.githubusercontent.com/CalmiraLinux/Ports/" + file_branch + "/CHANGELOG.md" # Что скачивать
         
         ufr = requests.get(branch)
         f.write(ufr.content)
