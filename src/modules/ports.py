@@ -23,12 +23,17 @@
 
 import os
 import sys
-import tarfile
-import gettext
 import json
+import subprocess
+import sqlite3
+
+# TODO - добавить переводы gettext
 
 ## BASE CONSTANTS ##
 ports_PORTS = "/usr/ports"
+ports_DATABASE = "/var/db/ports/ports.db"
+
+## BASE MESSAGES ##
 OK_MSG = "\033[32mOK\033[0m"
 FAIL_MSG = "\033[31mFAIL\033[0m"
 
@@ -58,6 +63,27 @@ class files(object):
             print(FAIL_MSG)
             return 1
 
+    # Create database
+    def create_db(db):
+        if files.check_port_file(db, "file"):
+            return 1
+        else:
+            conn = sqlite3.connect(db)
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                            CREATE TABLE ports (
+                                name TEXT, version TEXT, maintainer TEXT,
+                                description TEXT, priority TEXT, files TEXT
+                            );
+                            INSERT INTO ports VALUES (
+                                'ports', 'lx4/1.1', 'Linuxoid85, 'Ports system for Calmira',
+                                'user', '/usr/ports'
+                            );
+                           """)
+            conn.commit()
+
+
 ##################################
 ##                              ##
 ## Class for working with ports ##
@@ -84,11 +110,21 @@ class port(object):
             print(_("\033[1m\033[31mError: the directory with the port \033[0m\033[35m'{}'\033[0m\033[1m\033[31m does not exist\033[0m").format(port))
             return 1
 
-    # Function for check priority of package
-    # If priority = system, then package doesn't
-    # can remove from Calmira GNU/Linux
-    ## Priority:
-    # 'system' and 'user'
+    """
+    Function for check priority of port.
+    If priority = 'system', then package doesn't
+    can remove from Calmira GNU/Linux.
+
+    PRIORITY:
+        * 'system',
+        * 'user'
+
+    On success:
+        return code = 0
+
+    On failure:
+        return code = 1
+    """
     def check_priority(port):
         print(_("Port {} priority check...").format(port), end = " ")
 
@@ -109,4 +145,81 @@ class port(object):
 
         else:
             exit(1)
+
+    """
+    Function for run make port
+
+    Mode:
+        * 'quiet' - minimum of messages displayed on the screen;
+        * 'nonquiet' - output all assembly messages to the screen.
+
+    On success:
+        return code = 0
+
+    On failure:
+        return code = 1
+    """
+    def build_port(port, mode):
+        print(_("Checking for build instructions..."), end = " ")
+
+        ports_PORTNAME = ports_PORTS + "/" + port
+        ports_PORTBUILD = ports_PportsORTNAME + "/install" # Build instructions
+
+        if files.check_port_file(ports_PORTBUILD, "file"):
+            print(OK_MSG)
+        else:
+            print(FAIL_MSG)
+            exit(1)
+
+        port_build = subprocess.run(ports_PORTBUILD, shell=True)
+
+        # Проверка на корректное выполнение
+        if port_build.returncode == 0:
+            return 0
+        else:
+            return 1
+
+    """
+    Function for add port in database.
+
+    Modules:
+        * 'json' - for parse config.js;
+        * 'sqlite3' - for adding config.js data in database.
+
+    Return codes:
+        * 0 - success;
+        * 1 - uknown error
+
+    Files:
+        * 'config.json' - port data;
+        * '/var/db/ports/ports.db' - ports database.
+    """
+    def port_add_in_db(port_json):
+        print(_("Database initialization..."), end = " ")
+
+        # Проверка на наличие базы данных
+        if os.path.isfile(ports_DATABASE):
+            print(OK_MSG)
+        else:
+            print(FAIL_MSG)
+            files.create_db(ports_DATABASE)
+
+        # Проверка на наличие config.json
+        print(_("Checking for port data..."), end = " ")
+        if files.check_p(port_json, "file"):
+            print(OK_MSG)
+        else:
+            print(FAIL_MSG)
+            exit(1)
+
+        with open(port_json) as f:
+            port_data = json.load(f.read())
+
+        PortJson = [(port_data["name"], port_data["version"], port_data["maintainer"],
+                     port_data["description"], port_data["priority"], port_data["files"])]
+
+        cursor.executemany("INSERT INTO ports VALUES (?,?,?,?,?,?)", PortJson)
+        conn.commit()
+
+        return 0
 
