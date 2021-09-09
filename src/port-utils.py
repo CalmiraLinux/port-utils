@@ -149,93 +149,6 @@ class Window(object):
             print(_("Error: unknown operating mode "), mode)
             exit(1)
 
-
-# Other functions
-class Other(object):
-    # Checking to run a function as root
-    def getRoot(mode):
-        GID = os.getgid()
-        if mode == "check":
-            if GID != 0:
-                print(_("\033[31mError: you must run this script as root!\033[0m"))
-                exit(1)
-
-        elif mode == "return":
-            if GID != 0:
-                return(1)
-            else:
-                return(0)
-
-        else:
-            print(_("Uknown option 'getRoot()' for 'mode'!"))
-            exit(1)
-
-    # Getting the current date and time
-    def getDate():
-        return datetime.fromtimestamp(1576280665)
-
-    # Logging
-    def log_msg(message, status):
-        if Other.getRoot("return"):
-            f = open(LOGFILE, "a")
-            for index in message:
-                f.write(index)
-
-        else:
-            pass
-
-    # Checking for the existence of required directories
-    def checkDirs(mode):
-        if mode == "tree":
-            for DIR in "/var/cache/ports", "/usr/ports":
-                if os.path.isdir(DIR):
-                    print(_("Directory {0} exists."), DIR)
-                else:
-                    print(_("Directory {} does not exist, creating a new one."), DIR)
-                    os.makedirs(DIR)
-
-        elif mode == "news":
-            if os.path.isdir("/var/cache/ports"):
-                print(_("Directory /var/cache/ports exists."))
-            else:
-                print(_("Directory /var/cache/ports does not exist, creating a new one"))
-                os.makedirs("/var/cache/ports")
-        else:
-            exit(1)
-
-
-    # Receiving system data
-    # TODO - use to download ports for a specific version of the distribution
-    def getSystem():
-        sysData = "/etc/calm-release"
-
-        if os.path.isfile(sysData):
-            pass
-        else:
-            print(_("Error: the file with distribution data does not exist, or there is no access to read it. Exit."))
-            exit(1)
-
-        with open(sysData, 'r') as f:
-            systemData = json.loads(f.read())
-
-        return systemData["distroVersion"]
-
-    # Outputting debug messages
-    def printDbg(message):
-        if args.debug == "yes":
-            # Display messages on screen
-            print(message)
-        elif args.debug == "no":
-            # Log messages
-            f = open("/var/log/update-ports-dbg.log", "a")
-
-            for index in message:
-                f.write(index)
-
-            f.close()
-        else:
-            pass
-
 # Updating and installing the port
 class Update(object):
     # Checking for the existence of installed ports
@@ -500,41 +413,41 @@ class PortFunctions(object):
 #################
 
 # Check for compatibility with Calmira
-if Other.getSystem() != "1.1":
+if ports.service.getSystem() != "1.1":
     print(_("\033[31mError: the update-ports version is not compatible with the current Calmira version!\033[0m"))
     exit(1)
 
-Other.getRoot("check")
+ports.service.getRoot("check")
 
 # Command line parsing (2)
 if (args.news):
     # Initial checks
-    Other.printDbg("checkArchiveCache\n")
+    ports.service.printDbg("checkArchiveCache\n")
     Update.checkArchiveCache()
 
     # Get change logs
-    Other.checkDirs("news")
+    ports.service.checkDirs("news")
     PortFunctions.checkNews(args.news)
 
 elif (args.tree):
     # Initial checks
-    Other.printDbg("checkDirs\n")
-    Other.checkDirs('tree')
+    ports.service.printDbg("checkDirs\n")
+    ports.service.checkDirs('tree')
 
-    Other.printDbg("checkArchiveCache\n")
+    ports.service.printDbg("checkArchiveCache\n")
     Update.checkArchiveCache()
 
-    Other.printDbg("checkInstalledPorts\n")
+    ports.service.printDbg("checkInstalledPorts\n")
     Update.checkInstalledPorts()
 
     # Download and install
-    Other.printDbg("downloadPort\n")
+    ports.service.printDbg("downloadPort\n")
     Update.downloadPkg(args.tree, "port")
 
-    Other.printDbg("unpackPort\n")
+    ports.service.printDbg("unpackPort\n")
     Update.unpackPkg("port")
 
-    Other.printDbg("installPort\n")
+    ports.service.printDbg("installPort\n")
     Update.installPkg("port")
 
     # Final checks
@@ -547,7 +460,7 @@ elif (args.tree):
         exit(1)
 
 elif (args.doc):
-    Other.checkDirs("tree")
+    ports.service.checkDirs("tree")
 
     Update.checkArchiveCache()
 
@@ -556,7 +469,7 @@ elif (args.doc):
     Update.installPkg("doc")
 
 elif (args.clear):
-    Other.printDbg("checkArchiveCache\n")
+    ports.service.printDbg("checkArchiveCache\n")
 
     Update.checkArchiveCache()
 
