@@ -34,7 +34,7 @@ from tkinter import *
 import tkinter as tk
 
 ## Base Constants
-NAME_VERSION="port-utils v0.2 DEV"
+NAME_VERSION="port-utils v1.0 DEV"
 LOGFILE = "/var/log/port-utils.log"
 PORTDIR = "/usr/ports"               # Ports directory
 FILES_DIR = "/usr/share/ports"       # Files directory
@@ -49,7 +49,7 @@ PORT = CACHE_PORT_DIR + "/ports"     # Ports to install in /usr/ports
 DOC = CACHE_DOC_DIR + "/docs"
 
 sys.path.append(MODULES_DIR)
-#import core-functions
+import ports
 
 # TODO - закончить функцию для скачивания файла downloadPkg - добавить
 # скачивание документации
@@ -71,7 +71,7 @@ if __name__ != "__main__":
 ##                      ##
 ##########################
 
-parser = argparse.ArgumentParser(description='port-utils - Port system software',
+parser = argparse.ArgumentParser(description='port-utils - Port system software for CalmiraLinux',
                                  epilog="Good luck ;)")
 
 # Net branch
@@ -475,10 +475,10 @@ class PortFunctions(object):
         else:
             print(_("Error! Branch {} does not exist!").format(tree))
             exit(1)
-        
+
         # Downloading
         branch = "https://raw.githubusercontent.com/CalmiraLinux/Ports/" + file_branch + "/CHANGELOG.md" # Что скачивать
-        
+
         ufr = requests.get(branch)
         f.write(ufr.content)
 
