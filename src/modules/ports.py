@@ -26,6 +26,11 @@ import sys
 import json
 import subprocess
 import sqlite3
+import gettext
+
+gettext.bindtextdomain('port-utils', '/usr/share/locale')
+gettext.textdomain('port-utils')
+_ = gettext.gettext
 
 # TODO - добавить переводы gettext
 
