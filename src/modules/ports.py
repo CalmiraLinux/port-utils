@@ -185,6 +185,31 @@ class port(object):
             return 1
 
     """
+    Function for remove port from system
+
+    Synopsis:
+        port.remove_port(name)
+
+            * name - port name
+
+    On success:
+        return code = 0
+
+    On failure:
+        return code = 1
+    """
+    def remove_port(port):
+        ports_PORTREMOVE = ports_PORTS + "/" + port + "/remove"
+
+        if port.check_port(port):
+            port_remove = subprocess.call(ports_PORTREMOVE, shell=True)
+
+            if port_remove.returncode == 0:
+                return 0
+            else:
+                return 1
+
+    """
     Function for add port in database.
 
     Synopsis:
@@ -219,13 +244,13 @@ class port(object):
 
         # Проверка на наличие config.json
         print(_("Checking for port data..."), end = " ")
-        if files.check_p(port_json, "file"):
+        if files.check_port_file(port_json, "file"):
             print(OK_MSG)
         else:
             print(FAIL_MSG)
             exit(1)
         
-        port_data = json,load(port_json)
+        port_data = json.load(open(port_json))
         PortJson = [(port_data["name"], port_data["version"], port_data["maintainer"],
                      port_data["description"], port_data["priority"], port_data["files"])]
 
