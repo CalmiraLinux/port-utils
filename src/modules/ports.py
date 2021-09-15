@@ -207,10 +207,10 @@ class port(object):
         if port.check_port(port):
             port_remove = subprocess.call(ports_PORTREMOVE, shell=True)
 
-            if port_remove.returncode == 0:
-                return 0
-            else:
-                return 1
+            return port_remove.returncode
+        else:
+            print(_("Error: no port removal instruction file exists!"))
+            exit(1)
 
     """
     Function for add port in database.

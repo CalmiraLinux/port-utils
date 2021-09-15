@@ -5,6 +5,8 @@
 ## port-utils testing
 
 * 15.09.2021 Михаил Краснов <linuxoid85@gmail.com>
+    * Добавление вывода ошибки об отсутствии файла (функция `port.remove_port()`);
+    * Мелкий рефракторинг `port.remove_port()` - удаление лишнего ветвления;
     * Добавление функции `port.port_remove_from_db()`;
     * Добавление функции `port.remove_port()`;
     * Рефракторинг кода `port.check_port()`; фикс `port.build_port()`; изменение поведения `port.port_add_in_db()`; добавление функции `InstallPortPKG()`;
