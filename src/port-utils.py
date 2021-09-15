@@ -226,7 +226,6 @@ class Update(object):
             exit(1)
 
         f.write(ufr.content) # Downloading
-
         f.close()
 
         if os.path.isfile(CACHE_FILE):
