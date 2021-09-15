@@ -425,6 +425,16 @@ def InstallPortPKG(port):
         service.printDbg("\nAdding a port to the database")
         port.port_add_in_db(port)
 
+# Function for remove port
+def RemovePortPKG(port):
+    service.printDbg("Checking for the existence of a port")
+    if port.check_port(port):
+        service.printDbg(" OK\nRemoving port")
+        port.remove_port(port)
+
+        service.printDbg("\nRemoving port from database")
+        port.port_remove_from_db(port)
+
 # Проверка на импорт
 if __name__ == "__main__":
     print(_("The executable Port module must be imported."))
