@@ -101,19 +101,23 @@ class port(object):
 
         ports_PORTNAME = ports_PORTS + "/" + port
         ports_PORTJSON = ports_PORTNAME + "/config.json"
+        ports_PORTINSTALL = ports_PORTNAME + "/install"
+        ports_PORTREMOVE = ports_PORTNAME + "/remove"
 
-        if os.path.isdir(ports_PORTNAME):
-            if os.path.isfile(ports_PORTJSON):
+        for file in ports_PORTJSON, ports_PORTINSTALL:
+            print(_("checking {}...").format(file), end = " ")
+            if os.path.isfile(file):
                 print(OK_MSG)
-                return 0
             else:
                 print(FAIL_MSG)
-
-                print(_("\033[1m\033[31mError: port data file does not exist\033[0m"))
                 return 1
+        
+        print(_("checking {}...").format(ports_PORTREMOVE), end = " ")
+        if os.path.isfile(ports_PORTREMOVE):
+            print(OK_MSG)
+            return 0
         else:
-            print(_("\033[1m\033[31mError: the directory with the port \033[0m\033[35m'{}'\033[0m\033[1m\033[31m does not exist\033[0m").format(port))
-            return 1
+            print(_("WARNING: there is no file with instructions to remove the port."))
 
     """
     Function for check priority of port.
@@ -154,21 +158,17 @@ class port(object):
     """
     Function for run make port
 
-    Mode:
-        * 'quiet' - minimum of messages displayed on the screen;
-        * 'nonquiet' - output all assembly messages to the screen.
-
     On success:
         return code = 0
 
     On failure:
         return code = 1
     """
-    def build_port(port, mode):
+    def build_port(port):
         print(_("Checking for build instructions..."), end = " ")
 
         ports_PORTNAME = ports_PORTS + "/" + port
-        ports_PORTBUILD = ports_PportsORTNAME + "/install" # Build instructions
+        ports_PORTBUILD = ports_PORTNAME + "/install" # Build instructions
 
         if files.check_port_file(ports_PORTBUILD, "file"):
             print(OK_MSG)
@@ -187,6 +187,11 @@ class port(object):
     """
     Function for add port in database.
 
+    Synopsis:
+        port.port_add_in_db(name)
+
+        * name - port name (e.g. base/editors/vim)
+
     Modules:
         * 'json' - for parse config.js;
         * 'sqlite3' - for adding config.js data in database.
@@ -199,7 +204,10 @@ class port(object):
         * 'config.json' - port data;
         * '/var/db/ports/ports.db' - ports database.
     """
-    def port_add_in_db(port_json):
+    def port_add_in_db(port):
+        ports_PORTNAME = ports_PORTS + "/" + port
+        port_json = ports_PORTNAME + "/config.json"
+        
         print(_("Database initialization..."), end = " ")
 
         # Проверка на наличие базы данных
@@ -216,10 +224,8 @@ class port(object):
         else:
             print(FAIL_MSG)
             exit(1)
-
-        with open(port_json) as f:
-            port_data = json.load(f.read())
-
+        
+        port_data = json,load(port_json)
         PortJson = [(port_data["name"], port_data["version"], port_data["maintainer"],
                      port_data["description"], port_data["priority"], port_data["files"])]
 
@@ -312,6 +318,22 @@ class service(object):
             f.close()
         else:
             pass
+
+########################################################################
+##                                                                    ##
+## Basic functions for installing, removing and viewing port information ##
+##                                                                    ##
+########################################################################
+
+# Function for install port
+def InstallPortPKG(port):
+    service.printDbg("Checking for the existence of a port")
+    if port.check_port(port):
+        service.printDbg(" OK\nBuilding port")
+        port.build_port(port)
+
+        service.printDbg("\nAdding a port to the database")
+        port.port_add_in_db(port)
 
 # Проверка на импорт
 if __name__ == "__main__":
