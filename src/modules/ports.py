@@ -38,6 +38,9 @@ _ = gettext.gettext
 ports_PORTS = "/usr/ports"
 ports_DATABASE = "/var/db/ports/ports.db"
 
+## BASE VARIABLES ##
+CurrentDateTime = service.getDate()
+
 ## BASE MESSAGES ##
 OK_MSG = "\033[32mOK\033[0m"
 FAIL_MSG = "\033[31mFAIL\033[0m"
@@ -250,14 +253,76 @@ class port(object):
             print(FAIL_MSG)
             exit(1)
         
-        port_data = json.load(open(port_json))
+        f = open(port_json)
+        port_data = json.load(f)
         PortJson = [(port_data["name"], port_data["version"], port_data["maintainer"],
                      port_data["description"], port_data["priority"], port_data["files"])]
 
         cursor.executemany("INSERT INTO ports VALUES (?,?,?,?,?,?)", PortJson)
         conn.commit()
+        cursor.close()
+
+        f.close()
 
         return 0
+
+    """
+    Function for remove package from database
+
+    Synopsis:
+        port.port_remove_from_db(name)
+
+        * name - port name (e.g. base/editors/vim)
+        
+    Modules:
+        * 'json' - for parse config.sh;
+        * 'sqlite3' - for remove port from database.
+        
+    Return codes:
+        * 0 - success;
+        * 1 - uknown error.
+
+    Files:
+        * 'config.json' - port data;
+        * '/var/db/ports/ports.db; - ports database.
+    """
+    def port_remove_from_db(port):
+        ports_PORTNAME = ports_PORTS + "/" + port
+        port_json = ports_PORTNAME + "/config.json"
+
+        print(_("Database initialization..."), end = " ")
+
+        # Проверка на наличие базы данных
+        if os.path.isfile(ports_DATABASE):
+            print(OK_MSG)
+        else:
+            print(FAIL_MSG)
+            files.create_db(ports_DATABASE)
+            
+        # Проверка на наличие config.json
+        print(_("Checking port data..."), end = " ")
+        if files.check_port_file(port_json, 'file'):
+            print(OK_MSG)
+        else:
+            print(FAIL_MSG)
+            exit(1)
+            
+        f = open(port_json)
+        port_data = json.load(f)
+        PortName = port_data["name"]
+        
+        try:
+            cursor.executemany("DELETE FROM ports WHERE name = ?", (PortName, ))
+            conn.commit()
+            cursor.close()
+            
+        except sqlite3.Error as error:
+            print(_("SQLite error "), error)
+            return 1
+            
+        finally:
+            print(_("The database connection was closed at ").format(CurrentDateTime))
+            return 0
 
 class service(object):
     # Checking to run a function as root
