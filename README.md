@@ -11,7 +11,7 @@
 ## Синтаксис:
 
 ```
-port-utils --tree/--news stable/testing
+port-utils [ключ] [ветка]
 ```
 
 ## Ветки
@@ -23,6 +23,7 @@ port-utils --tree/--news stable/testing
 
 ## Опции
 
+* `--doc`  - скачать документацию Calmira;
 * `--tree` - обновить порты для определённой ветки;
 * `--news` - просмотр списка изменений в портах для определённой ветки.
 
@@ -33,3 +34,13 @@ port-utils --tree/--news stable/testing
 ```python
 pip3 install requests
 ```
+
+## Roadmap
+
+* Установка, просмотр информации и удаление порта;
+* `quiet` режим;
+* Графический режим.
+
+## TODO
+
+- [ ] Управление системой портов
