@@ -323,6 +323,39 @@ class port(object):
         finally:
             print(_("The database connection was closed at ").format(CurrentDateTime))
             return 0
+    
+    """
+    Function for print information about port
+
+    Usage:
+        port.info_port(port)
+
+        * 'port' - port name (e.g. base/editors/vim)
+    
+    Return codes:
+        * 0 - success;
+        * 1 - uknown fail.
+    """
+    def info_port(port):
+        ports_PORTNAME = ports_PORTS + "/" + port
+        ports_PORTJSON = ports_PORTNAME + "/config.json"
+        
+        f = open(ports_PORTJSON)
+        port_data = json.load(f)
+
+        try:
+            print(_("Name: {}").format(port_data["name"]))
+            print(_("Version: {}").format(port_data["version"]))
+            print(_("Maintainer: {}").format(port_data["maintainer"]))
+            print(_("Depends: {}").format(port_data["deps"]))
+
+            RetCode = 0
+        except:
+            RetCode = 1
+        finally:
+            f.close()
+            return RetCode
+
 
 class service(object):
     # Checking to run a function as root
@@ -409,31 +442,38 @@ class service(object):
         else:
             pass
 
-########################################################################
-##                                                                    ##
+###########################################################################
+##                                                                       ##
 ## Basic functions for installing, removing and viewing port information ##
-##                                                                    ##
-########################################################################
+##                                                                       ##
+###########################################################################
 
 # Function for install port
 def InstallPortPKG(port):
     service.printDbg("Checking for the existence of a port")
     if port.check_port(port):
-        service.printDbg(" OK\nBuilding port")
+        service.printDbg(" OK\nBuilding port\n")
         port.build_port(port)
 
-        service.printDbg("\nAdding a port to the database")
+        service.printDbg("\nAdding a port to the database\n")
         port.port_add_in_db(port)
 
 # Function for remove port
 def RemovePortPKG(port):
     service.printDbg("Checking for the existence of a port")
     if port.check_port(port):
-        service.printDbg(" OK\nRemoving port")
+        service.printDbg(" OK\nRemoving port\n")
         port.remove_port(port)
 
-        service.printDbg("\nRemoving port from database")
+        service.printDbg("\nRemoving port from database\n")
         port.port_remove_from_db(port)
+
+# Function for print information about port
+def InfoPortPKG(port):
+    service.printDbg("Checking for the existence of a port")
+    if port.check_port(port):
+        service.printDbg(" OK\n")
+        port.info_port(port)
 
 # Проверка на импорт
 if __name__ == "__main__":
