@@ -128,7 +128,7 @@ args = parser.parse_args()
 class Window(object):
     # About window
     def about(mode):
-        about_text = "Utilities for download, update ports and check his changelog"
+        about_text = "Utilities for download, install, update, remove ports and check his changelog"
 
         if mode == "gui":
             window = tk.Tk()
@@ -222,7 +222,7 @@ class Update(object):
             exit(0)
 
         else:
-            print(_("Error! Branch {0} does not exist!"), tree)
+            print(_("Error! Branch {0} does not exist!").format(tree))
             exit(1)
 
         f.write(ufr.content) # Downloading
@@ -322,15 +322,15 @@ class PortFunctions(object):
             returnVar = 1   # В случае наличия
             returnUnVar = 0 # В случае отсутствия
         else:
-            print(_("Error using checkFile: argument {0} for 'mode' does not exist!"), mode)
+            print(_("Error using checkFile: argument {0} for 'mode' does not exist!").format(mode))
             exit(1)
 
         # Проверка
         if os.path.isdir(file):
-            print(_("Directory {0} is exist"), file)
+            print(_("Directory {0} is exist").format(file))
             return(returnVar)
         else:
-            print(_("Directory {0} does not exist"), file)
+            print(_("Directory {0} does not exist").format(file))
             return(returnUnVar)
 
     # Cleaning the system from unnecessary files
@@ -355,15 +355,15 @@ class PortFunctions(object):
                     print(_("File {0}: OK"))
                     os.remove(FILE)
                 else:
-                    print(_("Error: the required file {0} does not exist!"), FILE)
+                    print(_("Error: the required file {0} does not exist!").format(FILE))
                     exit(1)
 
                 # Проверка на корректное удаление
                 if os.path.isfile(FILE):
-                    print(_("Error: the required file {0} has not been deleted!"))
+                    print(_("Error: the required file {0} has not been deleted!").format(FILE))
                     exit(1)
                 else:
-                    print(_("File {0} has deleted succesfully!"))
+                    print(_("File {0} has deleted succesfully!").format(FILE))
                     exit(0)
 
         elif mode == "src":

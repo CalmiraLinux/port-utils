@@ -27,6 +27,7 @@ import json
 import subprocess
 import sqlite3
 import gettext
+from datetime import datetime
 
 gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
@@ -38,15 +39,97 @@ _ = gettext.gettext
 ports_PORTS = "/usr/ports"
 ports_DATABASE = "/var/db/ports/ports.db"
 
-## BASE VARIABLES ##
-CurrentDateTime = service.getDate()
-
 ## BASE MESSAGES ##
 OK_MSG = "\033[32mOK\033[0m"
 FAIL_MSG = "\033[31mFAIL\033[0m"
 
 
 ## BASE FUNCTIONS ##
+
+class service(object):
+    # Checking to run a function as root
+    def getRoot(mode):
+        GID = os.getgid()
+        if mode == "check":
+            if GID != 0:
+                print(_("\033[31mError: you must run this script as root!\033[0m"))
+                exit(1)
+
+        elif mode == "return":
+            if GID != 0:
+                return(1)
+            else:
+                return(0)
+
+        else:
+            print(_("Uknown option 'getRoot()' for 'mode'!"))
+            exit(1)
+
+    # Getting the current date and time
+    def getDate():
+        return datetime.fromtimestamp(1576280665)
+
+    # Logging
+    def log_msg(message, status):
+        if Other.getRoot("return"):
+            f = open(LOGFILE, "a")
+            for index in message:
+                f.write(index)
+
+        else:
+            pass
+
+    # Checking for the existence of required directories
+    def checkDirs(mode):
+        if mode == "tree":
+            for DIR in "/var/cache/ports", "/usr/ports":
+                if os.path.isdir(DIR):
+                    print(_("Directory {0} exists."), DIR)
+                else:
+                    print(_("Directory {} does not exist, creating a new one."), DIR)
+                    os.makedirs(DIR)
+
+        elif mode == "news":
+            if os.path.isdir("/var/cache/ports"):
+                print(_("Directory /var/cache/ports exists."))
+            else:
+                print(_("Directory /var/cache/ports does not exist, creating a new one"))
+                os.makedirs("/var/cache/ports")
+        else:
+            exit(1)
+
+
+    # Receiving system data
+    # TODO - use to download ports for a specific version of the distribution
+    def getSystem():
+        sysData = "/etc/calm-release"
+
+        if os.path.isfile(sysData):
+            pass
+        else:
+            print(_("Error: the file with distribution data does not exist, or there is no access to read it. Exit."))
+            exit(1)
+
+        with open(sysData, 'r') as f:
+            systemData = json.loads(f.read())
+
+        return systemData["distroVersion"]
+
+    # Outputting debug messages
+    def printDbg(message):
+        if args.debug == "yes":
+            # Display messages on screen
+            print(message)
+        elif args.debug == "no":
+            # Log messages
+            f = open("/var/log/update-ports-dbg.log", "a")
+
+            for index in message:
+                f.write(index)
+
+            f.close()
+        else:
+            pass
 
 ##################################
 ##                              ##
@@ -289,6 +372,7 @@ class port(object):
     def port_remove_from_db(port):
         ports_PORTNAME = ports_PORTS + "/" + port
         port_json = ports_PORTNAME + "/config.json"
+        CurrentDateTime = service.getDate()
 
         print(_("Database initialization..."), end = " ")
 
@@ -356,91 +440,6 @@ class port(object):
             f.close()
             return RetCode
 
-
-class service(object):
-    # Checking to run a function as root
-    def getRoot(mode):
-        GID = os.getgid()
-        if mode == "check":
-            if GID != 0:
-                print(_("\033[31mError: you must run this script as root!\033[0m"))
-                exit(1)
-
-        elif mode == "return":
-            if GID != 0:
-                return(1)
-            else:
-                return(0)
-
-        else:
-            print(_("Uknown option 'getRoot()' for 'mode'!"))
-            exit(1)
-
-    # Getting the current date and time
-    def getDate():
-        return datetime.fromtimestamp(1576280665)
-
-    # Logging
-    def log_msg(message, status):
-        if Other.getRoot("return"):
-            f = open(LOGFILE, "a")
-            for index in message:
-                f.write(index)
-
-        else:
-            pass
-
-    # Checking for the existence of required directories
-    def checkDirs(mode):
-        if mode == "tree":
-            for DIR in "/var/cache/ports", "/usr/ports":
-                if os.path.isdir(DIR):
-                    print(_("Directory {0} exists."), DIR)
-                else:
-                    print(_("Directory {} does not exist, creating a new one."), DIR)
-                    os.makedirs(DIR)
-
-        elif mode == "news":
-            if os.path.isdir("/var/cache/ports"):
-                print(_("Directory /var/cache/ports exists."))
-            else:
-                print(_("Directory /var/cache/ports does not exist, creating a new one"))
-                os.makedirs("/var/cache/ports")
-        else:
-            exit(1)
-
-
-    # Receiving system data
-    # TODO - use to download ports for a specific version of the distribution
-    def getSystem():
-        sysData = "/etc/calm-release"
-
-        if os.path.isfile(sysData):
-            pass
-        else:
-            print(_("Error: the file with distribution data does not exist, or there is no access to read it. Exit."))
-            exit(1)
-
-        with open(sysData, 'r') as f:
-            systemData = json.loads(f.read())
-
-        return systemData["distroVersion"]
-
-    # Outputting debug messages
-    def printDbg(message):
-        if args.debug == "yes":
-            # Display messages on screen
-            print(message)
-        elif args.debug == "no":
-            # Log messages
-            f = open("/var/log/update-ports-dbg.log", "a")
-
-            for index in message:
-                f.write(index)
-
-            f.close()
-        else:
-            pass
 
 ###########################################################################
 ##                                                                       ##

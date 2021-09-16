@@ -10,5 +10,5 @@ install:
 
 	mkdir /usr/share/ports/modules
 	cp -v src/modules/ports.py   /usr/share/ports/modules/
-	chmod +x /usr/bin/update-ports
+	chmod +x /usr/bin/port-utils
 	rm -v ru.mo
