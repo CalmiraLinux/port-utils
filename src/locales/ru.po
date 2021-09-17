@@ -232,7 +232,7 @@ msgid ""
 "An instance of the program is already running. Complete it before accessing "
 "the database."
 msgstr ""
-"Экземпляр программы уже установлен. Завершите его перед тем, как получить "
+"Экземпляр программы уже запущен. Завершите его перед тем, как получить "
 "доступ к базе данных"
 
 #: modules/ports.py:199

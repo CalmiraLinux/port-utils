@@ -116,6 +116,13 @@ class service(object):
             systemData = json.loads(f.read())
 
         return systemData["distroVersion"]
+    
+    # Проверка версии системы, совместимой с портами
+    def check_system(release):
+        if service.getSystem() == "1.0" or service.getSystem() == "1.1":
+            return 0
+        else:
+            return 1
 
     # Outputting debug messages
     def printDbg(message):
