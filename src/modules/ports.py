@@ -38,6 +38,7 @@ _ = gettext.gettext
 ports_PORTS = "/usr/ports"
 ports_DATABASE = "/var/db/ports/ports.db"
 database_LOCK = "/var/lock/ports"
+system_DATA = "/etc/calm-release"
 
 ## BASE MESSAGES ##
 OK_MSG = "\033[32mOK\033[0m"
@@ -118,8 +119,12 @@ class service(object):
         return systemData["distroVersion"]
     
     # Проверка версии системы, совместимой с портами
-    def check_system(release):
-        if service.getSystem() == "1.0" or service.getSystem() == "1.1":
+    def check_system(package_release):
+        f = open(system_DATA)
+        system_data = json.load(f)
+        release = system_data["distroVersion"]
+
+        if package_release == release:
             return 0
         else:
             return 1
@@ -275,12 +280,22 @@ class port(object):
 
         ports_PORTNAME = ports_PORTS + "/" + port
         ports_PORTBUILD = ports_PORTNAME + "/install" # Build instructions
+        ports_PORTJSON = ports_PORTNAME + "/config.json"
 
         if files.check_port_file(ports_PORTBUILD, "file"):
             print(OK_MSG)
         else:
             print(FAIL_MSG)
             exit(1)
+
+        print(_("Check Calmira release... "), end = " ")        
+        f = open(ports_PORTJSON)
+        CalmiraLinux = json.load(f)
+
+        if service.check_system(CalmiraLinux["release"]):
+            print(OK_MSG)
+        else:
+            print(FAIL_MSG)
 
         port_build = subprocess.run(ports_PORTBUILD, shell=True)
 
@@ -306,7 +321,17 @@ class port(object):
     """
     def remove_port(port):
         ports_PORTREMOVE = ports_PORTS + "/" + port + "/remove"
+        ports_PORTJSON = ports_PORTS + "/" + port + "/config.json"
 
+        print(_("Check Calmira release... "), end = " ")        
+        f = open(ports_PORTJSON)
+        CalmiraLinux = json.load(f)
+
+        if service.check_system(CalmiraLinux["release"]):
+            print(OK_MSG)
+        else:
+            print(FAIL_MSG)
+        
         if port.check_port(port):
             port_remove = subprocess.call(ports_PORTREMOVE, shell=True)
 
