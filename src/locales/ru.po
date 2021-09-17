@@ -206,3 +206,19 @@ msgstr "Проверка на корректное обновление..."
 #: port-utils.py:467
 msgid "NOT FOUND! It is possible that something went wrong during the update."
 msgstr "НЕ СУЩЕСТВУЕТ! Возможно, во время обновления что-то пошло не так."
+
+#: port-utils.py:431
+msgid "Name: {}"
+msgstr "Имя: {}"
+
+#: port-utils.py:432
+msgid "Version: {}"
+msgstr "Версия: {}"
+
+#: port-utils.py:433
+msgid "Maintainer: {}"
+msgstr "Сопровождающий: {}"
+
+#: port-utils.py:434
+msgid "Depends: {}"
+msgstr "Зависимости^ {}"

@@ -440,7 +440,6 @@ class port(object):
             f.close()
             return RetCode
 
-
 ###########################################################################
 ##                                                                       ##
 ## Basic functions for installing, removing and viewing port information ##

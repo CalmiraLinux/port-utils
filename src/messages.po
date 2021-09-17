@@ -203,3 +203,19 @@ msgstr ""
 #: port-utils.py:467
 msgid "NOT FOUND! It is possible that something went wrong during the update."
 msgstr ""
+
+#: port-utils.py:431
+msgid "Name: {}"
+msgstr ""
+
+#: port-utils.py:432
+msgid "Version: {}"
+msgstr ""
+
+#: port-utils.py:433
+msgid "Maintainer: {}"
+msgstr ""
+
+#: port-utils.py:434
+msgid "Depends: {}"
+msgstr ""
