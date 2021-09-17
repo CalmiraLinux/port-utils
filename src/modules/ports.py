@@ -33,11 +33,11 @@ gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
 _ = gettext.gettext
 
-# TODO - добавить переводы gettext
 
 ## BASE CONSTANTS ##
 ports_PORTS = "/usr/ports"
 ports_DATABASE = "/var/db/ports/ports.db"
+database_LOCK = "/var/lock/ports"
 
 ## BASE MESSAGES ##
 OK_MSG = "\033[32mOK\033[0m"
@@ -57,9 +57,9 @@ class service(object):
 
         elif mode == "return":
             if GID != 0:
-                return(1)
+                return 1
             else:
-                return(0)
+                return 0
 
         else:
             print(_("Uknown option 'getRoot()' for 'mode'!"))
@@ -75,6 +75,8 @@ class service(object):
             f = open(LOGFILE, "a")
             for index in message:
                 f.write(index)
+            
+            return message
 
         else:
             pass
@@ -173,6 +175,17 @@ class files(object):
                             );
                            """)
             conn.commit()
+    
+    # Lock database
+    def lock_db(db):
+        if os.path.isfile(database_LOCK):
+            print(_("An instance of the program is already running. Complete it before accessing the database."))
+            return 1
+        else:
+            f = open(database_LOCK, 'a')
+            for index in db:
+                f.write(index)
+            return 0
 
 
 ##################################
@@ -336,6 +349,12 @@ class port(object):
             print(FAIL_MSG)
             exit(1)
         
+        # Блокирование базы данных для других процессов
+        if files.lock_db(ports_DATABASE):
+            print(_("Database locked successfully"))
+        else:
+            print(_("The database can NOT be locked. Further use of the program EXCLUSIVELY at your own peril and risk."))
+        
         f = open(port_json)
         port_data = json.load(f)
         PortJson = [(port_data["name"], port_data["version"], port_data["maintainer"],
@@ -348,7 +367,7 @@ class port(object):
         f.close()
 
         return 0
-
+    
     """
     Function for remove package from database
 
@@ -367,7 +386,7 @@ class port(object):
 
     Files:
         * 'config.json' - port data;
-        * '/var/db/ports/ports.db; - ports database.
+        * '/var/db/ports/ports.db' - ports database.
     """
     def port_remove_from_db(port):
         ports_PORTNAME = ports_PORTS + "/" + port
@@ -390,6 +409,12 @@ class port(object):
         else:
             print(FAIL_MSG)
             exit(1)
+        
+        # Блокирование базы данных для других процессов
+        if files.lock_db(ports_DATABASE):
+            print(_("Database locked successfully"))
+        else:
+            print(_("The database can NOT be locked. Further use of the program EXCLUSIVELY at your own peril and risk."))
             
         f = open(port_json)
         port_data = json.load(f)
