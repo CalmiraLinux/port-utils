@@ -165,11 +165,11 @@ class files(object):
             cursor.execute("""
                             CREATE TABLE ports (
                                 name TEXT, version TEXT, maintainer TEXT,
-                                description TEXT, priority TEXT, files TEXT
+                                description TEXT, priority TEXT
                             );
                             INSERT INTO ports VALUES (
                                 'ports', 'lx4/1.1', 'Linuxoid85, 'Ports system for Calmira',
-                                'user', '/usr/ports'
+                                'user'
                             );
                            """)
             conn.commit()
@@ -339,9 +339,9 @@ class port(object):
         f = open(port_json)
         port_data = json.load(f)
         PortJson = [(port_data["name"], port_data["version"], port_data["maintainer"],
-                     port_data["description"], port_data["priority"], port_data["files"])]
+                     port_data["description"], port_data["priority"]]
 
-        cursor.executemany("INSERT INTO ports VALUES (?,?,?,?,?,?)", PortJson)
+        cursor.executemany("INSERT INTO ports VALUES (?,?,?,?,?)", PortJson)
         conn.commit()
         cursor.close()
 
@@ -436,7 +436,7 @@ class port(object):
             RetCode = 0
         except:
             RetCode = 1
-        finally:
+        finally:, port_data["files"])
             f.close()
             return RetCode
 
