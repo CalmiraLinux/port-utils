@@ -221,4 +221,80 @@ msgstr "Сопровождающий: {}"
 
 #: port-utils.py:434
 msgid "Depends: {}"
-msgstr "Зависимости^ {}"
+msgstr "Зависимости: {}"
+
+#: modules/ports.py:149
+msgid "'check_port_file': Error: Option {} does not exist!"
+msgstr "'check_port_file': Ошибка: опции {} не существует!"
+
+#: modules/ports.py:182
+msgid ""
+"An instance of the program is already running. Complete it before accessing "
+"the database."
+msgstr ""
+"Экземпляр программы уже установлен. Завершите его перед тем, как получить "
+"доступ к базе данных"
+
+#: modules/ports.py:199
+msgid "Checking for the existence of a port {} ..."
+msgstr "Проверк наличия порта {}..."
+
+#: modules/ports.py:207 modules/ports.py:214
+msgid "checking {}..."
+msgstr "проверка {}..."
+
+#: modules/ports.py:219
+msgid "WARNING: there is no file with instructions to remove the port."
+msgstr "ПРЕДУПРЕЖДЕНИЕ: файла с инструкцией по удалению порта нет."
+
+#: modules/ports.py:237
+msgid "Port {} priority check..."
+msgstr "Проверка приоритета порта {}..."
+
+#: modules/ports.py:251
+msgid "'check_priority': Error: priority {} does not exist!"
+msgstr "'check_priority': Ошибка: приоритета {} не существует!"
+
+#: modules/ports.py:267
+msgid "Checking for build instructions..."
+msgstr "Проверка инструкций сборки..."
+
+#: modules/ports.py:308
+msgid "Error: no port removal instruction file exists!"
+msgstr "Ошибка: инструкций для удаления порта не найдено!"
+
+#: modules/ports.py:335 modules/ports.py:395
+msgid "Database initialization..."
+msgstr "Инициализация базы данных"
+
+#: modules/ports.py:345
+msgid "Checking for port data..."
+msgstr "Проверка данных порта..."
+
+#: modules/ports.py:354 modules/ports.py:414
+msgid "Database locked successfully"
+msgstr "База данных заблокирована успешно"
+
+#: modules/ports.py:356 modules/ports.py:416
+msgid ""
+"The database can NOT be locked. Further use of the program EXCLUSIVELY at "
+"your own peril and risk."
+msgstr ""
+"База данных НЕ может быть заблокировано. Дальнейшее использование программы "
+"ИСКЛЮЧИТЕЛЬНО на свой страх и риск."
+
+#: modules/ports.py:405
+msgid "Checking port data..."
+msgstr "Проверка данных порта"
+
+#: modules/ports.py:428
+msgid "SQLite error "
+msgstr "Ошибка в SQlite: "
+
+#: modules/ports.py:432
+msgid "The database connection was closed at {}"
+msgstr "Соединение с базой данных было закрыто в {}"
+
+#: modules/ports.py:502
+msgid "The executable Port module must be imported."
+msgstr "Исполняемый модуль Порта должен быть импортирован"

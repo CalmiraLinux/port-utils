@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-29 01:41+0300\n"
+"POT-Creation-Date: 2021-09-17 05:19+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,205 +17,121 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: port-utils.py:53
-msgid "Error: you must run this script as root!"
+#: modules/ports.py:55
+msgid "[31mError: you must run this script as root![0m"
 msgstr ""
 
-#: port-utils.py:58
-msgid "The executable Port module must not be imported."
+#: modules/ports.py:65
+msgid "Uknown option 'getRoot()' for 'mode'!"
 msgstr ""
 
-#: port-utils.py:139
-msgid "Error: unknown operating mode "
-msgstr ""
-
-#: port-utils.py:160
+#: modules/ports.py:89
 #, python-brace-format
 msgid "Directory {0} exists."
 msgstr ""
 
-#: port-utils.py:162
+#: modules/ports.py:91
 msgid "Directory {} does not exist, creating a new one."
 msgstr ""
 
-#: port-utils.py:167
+#: modules/ports.py:96
 msgid "Directory /var/cache/ports exists."
 msgstr ""
 
-#: port-utils.py:169
+#: modules/ports.py:98
 msgid "Directory /var/cache/ports does not exist, creating a new one"
 msgstr ""
 
-#: port-utils.py:184
+#: modules/ports.py:112
 msgid ""
 "Error: the file with distribution data does not exist, or there is no access "
 "to read it. Exit."
 msgstr ""
 
-#: port-utils.py:213
-msgid "The previous version of ports is installed. Removed..."
+#: modules/ports.py:149
+msgid "'check_port_file': Error: Option {} does not exist!"
 msgstr ""
 
-#: port-utils.py:216 port-utils.py:299
-msgid "No previous ports were found."
-msgstr ""
-
-#: port-utils.py:221
+#: modules/ports.py:182
 msgid ""
-"The previous version of the archive with ports was found in the cache. "
-"Removed ..."
+"An instance of the program is already running. Complete it before accessing "
+"the database."
 msgstr ""
 
-#: port-utils.py:224
-msgid "No previous version of the ports system was found."
+#: modules/ports.py:199
+msgid "Checking for the existence of a port {} ..."
 msgstr ""
 
-#: port-utils.py:245 port-utils.py:398
-#, python-brace-format
-msgid "Error! Branch {0} does not exist!"
+#: modules/ports.py:207 modules/ports.py:214
+msgid "checking {}..."
 msgstr ""
 
-#: port-utils.py:253
-msgid "Downloaded successfully!"
+#: modules/ports.py:219
+msgid "WARNING: there is no file with instructions to remove the port."
 msgstr ""
 
-#: port-utils.py:255
-msgid "The file has not been downloaded! Check internet access."
+#: modules/ports.py:237
+msgid "Port {} priority check..."
 msgstr ""
 
-#: port-utils.py:269
-msgid "Package unpacked successfully."
+#: modules/ports.py:251
+msgid "'check_priority': Error: priority {} does not exist!"
 msgstr ""
 
-#: port-utils.py:271
-msgid "Unknown error, crash."
+#: modules/ports.py:267
+msgid "Checking for build instructions..."
 msgstr ""
 
-#: port-utils.py:275
-msgid "Package read error. Perhaps he is broken."
+#: modules/ports.py:308
+msgid "Error: no port removal instruction file exists!"
 msgstr ""
 
-#: port-utils.py:279
-msgid "Package unpacking error. The format is not supported."
+#: modules/ports.py:335 modules/ports.py:395
+msgid "Database initialization..."
 msgstr ""
 
-#: port-utils.py:282
+#: modules/ports.py:345
+msgid "Checking for port data..."
+msgstr ""
+
+#: modules/ports.py:354 modules/ports.py:414
+msgid "Database locked successfully"
+msgstr ""
+
+#: modules/ports.py:356 modules/ports.py:416
 msgid ""
-"Package unpacking error. Package not found. It may not have been downloaded, "
-"or a third-party program changed it's name during unpacking."
+"The database can NOT be locked. Further use of the program EXCLUSIVELY at "
+"your own peril and risk."
 msgstr ""
 
-#: port-utils.py:289
-msgid "Directory with unpacked ports found, installing..."
+#: modules/ports.py:405
+msgid "Checking port data..."
 msgstr ""
 
-#: port-utils.py:291
-msgid "Package unpacking error: directory not found."
+#: modules/ports.py:428
+msgid "SQLite error "
 msgstr ""
 
-#: port-utils.py:296
-msgid "Found directory with previous ports version. Removed..."
+#: modules/ports.py:432
+msgid "The database connection was closed at {}"
 msgstr ""
 
-#: port-utils.py:316
-#, python-brace-format
-msgid "Directory {0} is exist"
-msgstr ""
-
-#: port-utils.py:319
-#, python-brace-format
-msgid "Error: the required directory {0} does not exist!"
-msgstr ""
-
-#: port-utils.py:324
-#, python-brace-format
-msgid "Directory: file {0} is exist!"
-msgstr ""
-
-#: port-utils.py:327
-#, python-brace-format
-msgid "Directory {0} does not exist"
-msgstr ""
-
-#: port-utils.py:331
-#, python-brace-format
-msgid "Error using checkFile: argument {0} for 'mode' does not exist!"
-msgstr ""
-
-#: port-utils.py:338
-msgid "Checking for cache existence..."
-msgstr ""
-
-#: port-utils.py:340
-msgid "OK"
-msgstr ""
-
-#: port-utils.py:345
-msgid "FAIL: Cache directory not found"
-msgstr ""
-
-#: port-utils.py:350
-msgid "Checking for the existence of log files..."
-msgstr ""
-
-#: port-utils.py:353
-#, python-brace-format
-msgid "File {0}: OK"
-msgstr ""
-
-#: port-utils.py:356
-#, python-brace-format
-msgid "Error: the required file {0} does not exist!"
-msgstr ""
-
-#: port-utils.py:361
-#, python-brace-format
-msgid "Error: the required file {0} has not been deleted!"
-msgstr ""
-
-#: port-utils.py:364
-#, python-brace-format
-msgid "File {0} has deleted succesfully!"
-msgstr ""
-
-#: port-utils.py:369
-msgid "Checking for the existence of a source tree..."
-msgstr ""
-
-#: port-utils.py:381
-msgid "Error: the required /usr/src has not been deleted!"
-msgstr ""
-
-#: port-utils.py:407
-msgid "No such file /var/cache/ports/news.txt"
-msgstr ""
-
-#: port-utils.py:434
-msgid ""
-"Error: the update-ports version is not compatible with the current Calmira "
-"version!"
-msgstr ""
-
-#: port-utils.py:462
-msgid "Checking for correct update..."
-msgstr ""
-
-#: port-utils.py:467
-msgid "NOT FOUND! It is possible that something went wrong during the update."
-msgstr ""
-
-#: port-utils.py:431
+#: modules/ports.py:455
 msgid "Name: {}"
 msgstr ""
 
-#: port-utils.py:432
+#: modules/ports.py:456
 msgid "Version: {}"
 msgstr ""
 
-#: port-utils.py:433
+#: modules/ports.py:457
 msgid "Maintainer: {}"
 msgstr ""
 
-#: port-utils.py:434
+#: modules/ports.py:458
 msgid "Depends: {}"
+msgstr ""
+
+#: modules/ports.py:502
+msgid "The executable Port module must be imported."
 msgstr ""

@@ -358,7 +358,7 @@ class port(object):
         f = open(port_json)
         port_data = json.load(f)
         PortJson = [(port_data["name"], port_data["version"], port_data["maintainer"],
-                     port_data["description"], port_data["priority"]]
+                     port_data["description"], port_data["priority"])]
 
         cursor.executemany("INSERT INTO ports VALUES (?,?,?,?,?)", PortJson)
         conn.commit()
@@ -391,7 +391,6 @@ class port(object):
     def port_remove_from_db(port):
         ports_PORTNAME = ports_PORTS + "/" + port
         port_json = ports_PORTNAME + "/config.json"
-        CurrentDateTime = service.getDate()
 
         print(_("Database initialization..."), end = " ")
 
@@ -430,7 +429,7 @@ class port(object):
             return 1
             
         finally:
-            print(_("The database connection was closed at ").format(CurrentDateTime))
+            print(_("The database connection was closed at {}").format(service.getDate()))
             return 0
     
     """
