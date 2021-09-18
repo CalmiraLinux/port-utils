@@ -1,9 +1,11 @@
+/* Пример файла /etc/calm-release
+ * Перед использованием удалить все комментарии вроде этого */
 {
-    "distroName": "Calmira LX4",
-	"distroVersion": 1.1,
-	"distroCodename": "Aquarius",
-	"distroDesc": "Calmira LX4 1.1 Aquarius",
-	"distroArch": "x86_64",
-	"distroBuild": 7,
-	"distroBuildDate": "05.09.2021"
+    "distroName": "Calmira LX4",              // Название дистрибутива
+	"distroVersion": 1.1,                     // Версия дистрибутива
+	"distroCodename": "Aquarius",             // Кодовое имя дистрибутива
+	"distroDesc": "Calmira LX4 1.1 Aquarius", // Полное имя дистрибутива
+	"distroArch": "x86_64",                   // Архитекутура дистрибутива
+	"distroBuild": 7,                         // Версия билда дистрибутива
+	"distroBuildDate": "05.09.2021"           // Дата сборки дистрибутива
 }
