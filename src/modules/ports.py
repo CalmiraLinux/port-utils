@@ -41,8 +41,8 @@ database_LOCK = "/var/lock/ports"
 system_DATA = "/etc/calm-release"
 
 ## BASE MESSAGES ##
-OK_MSG = "\033[32mOK\033[0m"
-FAIL_MSG = "\033[31mFAIL\033[0m"
+OK_MSG = _("\033[32mOK\033[0m")
+FAIL_MSG = _("\033[31mFAIL\033[0m")
 
 
 ## BASE FUNCTIONS ##
@@ -492,7 +492,7 @@ class port(object):
             RetCode = 0
         except:
             RetCode = 1
-        finally:, port_data["files"])
+        finally:
             f.close()
             return RetCode
 
