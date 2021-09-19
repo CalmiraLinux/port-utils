@@ -343,8 +343,17 @@ class PortFunctions(object):
             if os.path.isdir(CACHE):
                 print(_("OK"))
 
-                shutil.rmtree(CACHE)
-                os.makedirs(CACHE)
+                print(_("Removing {}...").format(CACHE))
+                try:
+                    shutil.rmtree(CACHE)
+                except as remove_error:
+                    print(_("Error removing directory {0}: {1}").format(CACHE, remove_error))
+                
+                print(_("Make {}...").format(CACHE))
+                try:
+                    os.makedirs(CACHE)
+                except as make_error:
+                    print(_("Error making directory {0}: {1}").format(CACHE, make_error))
             else:
                 print(_("FAIL: Cache directory not found"))
                 exit(1)
@@ -354,7 +363,7 @@ class PortFunctions(object):
             print(_("Checking for the existence of log files..."), end = " ")
             for FILE in LOGFILE, '/var/log/update-ports-dbg.log':
                 if os.path.isfile(FILE):
-                    print(_("File {0}: OK"))
+                    print(_("File {0}: exists").format(FILE))
                     os.remove(FILE)
                 else:
                     print(_("Error: the required file {0} does not exist!").format(FILE))

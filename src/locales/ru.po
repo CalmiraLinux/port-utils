@@ -163,8 +163,8 @@ msgstr "Проверка на наличие файлов лога"
 
 #: port-utils.py:353
 #, python-brace-format
-msgid "File {0}: OK"
-msgstr "Файл {0}: Успешно"
+msgid "File {0}: exists"
+msgstr "Файл {0}: существует"
 
 #: port-utils.py:356
 #, python-brace-format

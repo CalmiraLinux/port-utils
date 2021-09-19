@@ -33,12 +33,13 @@ gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
 _ = gettext.gettext
 
+# f - file variable (for 'open' instruction)
 
 ## BASE CONSTANTS ##
-ports_PORTS = "/usr/ports"
-ports_DATABASE = "/var/db/ports/ports.db"
-database_LOCK = "/var/lock/ports"
-system_DATA = "/etc/calm-release"
+ports_PORTS = "/usr/ports"                  # Ports directory
+ports_DATABASE = "/var/db/ports/ports.db"   # Ports database
+database_LOCK = "/var/lock/ports"           # Ports lock file
+system_DATA = "/etc/calm-release"           # System information (e.g. name, release, codename)
 
 ## BASE MESSAGES ##
 OK_MSG = _("\033[32mOK\033[0m")
@@ -47,7 +48,13 @@ FAIL_MSG = _("\033[31mFAIL\033[0m")
 
 ## BASE FUNCTIONS ##
 
+#######################
+##                   ##
+## Service functions ##
+##                   ##
+#######################
 class service(object):
+
     # Checking to run a function as root
     def getRoot(mode):
         GID = os.getgid()
@@ -87,7 +94,7 @@ class service(object):
         if mode == "tree":
             for DIR in "/var/cache/ports", "/usr/ports":
                 if os.path.isdir(DIR):
-                    print(_("Directory {0} exists."), DIR)
+                    print(_("Directory {} exists."), DIR)
                 else:
                     print(_("Directory {} does not exist, creating a new one."), DIR)
                     os.makedirs(DIR)
@@ -114,9 +121,10 @@ class service(object):
             exit(1)
 
         with open(sysData, 'r') as f:
-            systemData = json.loads(f.read())
+            systemData = json.load(f)
 
         return systemData["distroVersion"]
+
     
     # Проверка версии системы, совместимой с портами
     def check_system(package_release):
