@@ -99,6 +99,18 @@ parser.add_argument("--tree", "-t",
 parser.add_argument("--news",
                     choices=["stable", "testing"], help="Read news of ports")
 
+# Install port package
+parser.add_argument("--install", "-i",
+                    type=str, help="Download, build and install port package")
+
+# Remove port package
+parser.add_argument("--remove", "-r",
+                    type=str, help="Remove port package")
+
+# Show info about port
+parser.add_argument("--info", "-I",
+                    type=str, help="Show info about port (name, version, priority, etc.)")
+
 # Install documentation
 parser.add_argument("--doc",
                     choices=["stable", "testing"], help="Download Calmira and Ports System documentation")
@@ -482,6 +494,15 @@ elif (args.tree):
     else:
         print(_("NOT FOUND! It is possible that something went wrong during the update."))
         exit(1)
+
+elif (args.install):
+    ports.InstallPortPKG(args.install)
+
+elif (args.remove):
+    ports.RemovePortPKG(args.remove)
+
+elif (args.info):
+    ports.InfoPortPKG(args.info)
 
 elif (args.doc):
     ports.service.checkDirs("tree")

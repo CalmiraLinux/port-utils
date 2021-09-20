@@ -112,15 +112,13 @@ class service(object):
     # Receiving system data
     # TODO - use to download ports for a specific version of the distribution
     def getSystem():
-        sysData = "/etc/calm-release"
-
-        if os.path.isfile(sysData):
+        if os.path.isfile(system_DATA):
             pass
         else:
             print(_("Error: the file with distribution data does not exist, or there is no access to read it. Exit."))
             exit(1)
 
-        with open(sysData, 'r') as f:
+        with open(system_DATA, 'r') as f:
             systemData = json.load(f)
 
         return systemData["distroVersion"]
@@ -300,6 +298,8 @@ class port(object):
         f = open(ports_PORTJSON)
         CalmiraLinux = json.load(f)
 
+        # TODO - добавить проверку на совместимость релиза
+        # дистрибутива с портом
         if service.check_system(CalmiraLinux["release"]):
             print(OK_MSG)
         else:
@@ -307,11 +307,7 @@ class port(object):
 
         port_build = subprocess.run(ports_PORTBUILD, shell=True)
 
-        # Проверка на корректное выполнение
-        if port_build.returncode == 0:
-            return 0
-        else:
-            return 1
+        return port_build.returncode
 
     """
     Function for remove port from system
