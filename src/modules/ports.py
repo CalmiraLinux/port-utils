@@ -285,7 +285,7 @@ class port(object):
         print(_("Checking for build instructions..."), end = " ")
 
         ports_PORTNAME = ports_PORTS + "/" + port
-        ports_PORTBUILD = ports_PORTNAME + "/install" # Build instructions
+        ports_PORTBUILD = ports_PORTNAME + "/install"    # Build instructions
         ports_PORTJSON = ports_PORTNAME + "/config.json"
 
         if files.check_port_file(ports_PORTBUILD, "file"):
@@ -305,6 +305,7 @@ class port(object):
         else:
             print(FAIL_MSG)
 
+        # Starting build port
         port_build = subprocess.run(ports_PORTBUILD, shell=True)
 
         return port_build.returncode
