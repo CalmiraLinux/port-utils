@@ -4,6 +4,9 @@
 
 ## port-utils testing
 
+* 23.09.2021 Михаил Краснов <linuxoid85@gmail.com>
+    * Добавление корректных сведений в `assests/calm-release`.
+
 * 20.09.2021 Михаил Краснов <linuxoid85@gmail.com>
     * Обновление раздела с примерами файлов;
     * Объединение TODO и Roadmap в README;
