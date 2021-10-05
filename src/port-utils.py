@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 #
 # port-utils - Port system software
 # Copyright (C) 2021 Michail Krasnov
@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-# Project Page: http://github.com/CalmiraLinux/port-utils
+# Project Page: https://github.com/CalmiraLinux/port-utils
 # Michail Krasnov <linuxoid85@gmail.com>
 #
 
@@ -27,420 +27,929 @@ import argparse
 import shutil
 import tarfile
 import requests
-import gettext
 import json
+import subprocess
+import sqlite3
+import gettext
 from datetime import datetime
-from tkinter import *
-import tkinter as tk
 
-## Base Constants
-NAME_VERSION="port-utils v1.0 DEV"
-LOGFILE = "/var/log/port-utils.log"
-PORTDIR = "/usr/ports"               # Ports directory
-FILES_DIR = "/usr/share/ports"       # Files directory
-MODULES_DIR = FILES_DIR + "/modules" # Modules directory
-DOCDIR = "/usr/share/doc/Calmira"    # Documents dir
-CACHE = "/var/cache/ports"           # Cache directory
-CACHE_FILE = CACHE + "/ports.txz"    # Downloaded package with ports
-CACHE_DOC_FILE = CACHE + "/docs.txz" # Downloaded package with documentation
-CACHE_PORT_DIR = CACHE + "/ports"    # Ports unpacked to cache
-CACHE_DOC_DIR = CACHE + "/docs"      # Documentation unpacked to cache
-PORT = CACHE_PORT_DIR + "/ports"     # Ports to install in /usr/ports
-DOC = CACHE_DOC_DIR + "/docs"
-
-sys.path.append(MODULES_DIR)
-import ports
-
-"""
-TODO - закончить функцию для скачивания файла downloadPkg - добавить
-скачивание документации;
-
-TODO - добавить возможность сборки определённых портов
-* Скачивать и распаковывать нужные файлы с помощью скрипта
-    * НУЖНЫЕ ПЕРЕМЕННЫЕ:
-        * GET_FILE - ссылка для скачивания файла
-        * GET_PACKAGE - скачанный пакет
-        * GET_PKG_DIR - распакованная директория с пакетом
-    * Переменные указать в файле с инструкциями по сборке (/usr/ports)
-    * Саму сборку брать из инструкций в /usr/ports
-
-TODO - добавить ключи для установки, удаления и просмотра информации:
-    * '--install',
-    * '--remove',
-    * '--info'.
-"""
-
-# FIXME - getext
 gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
 _ = gettext.gettext
 
-# Проверка на импортирование
+## ABOUT PROGRAM ##
+PROGRAM_RELEASE = "alpha build 2"
+NAME_VERSION = "port-utils v1.0 DEV " + PROGRAM_RELEASE # Name + version
+
+## BASE CONSTANTS ##
+LOGDIR         = "/var/log"                   # Log directory
+LOGFILE        = LOGDIR + "port-utils.log"    # Log file
+PORTDIR        = "/usr/ports"                 # Port system directory
+FILES_DIR      = "/usr/share/ports"           # Files directory
+DOCDIR         = "/usr/share/doc/Calmira"     # Documentation dorectory
+CACHE          = "/var/cache/ports"           # Cache directory
+PORT_CACHE     = CACHE + "/ports.txz"         # Downloaded ports package
+DOC_CACHE      = CACHE + "/docs.txz"          # Downloaded documentation package
+PORT_CACHE_DIR = CACHE + "/ports"             # Unpacked ports directory
+DOC_CACHE_DIR  = CACHE + "/docs"              # Unpacked documentation directory
+PORT           = PORT_CACHE_DIR + "/ports"    # Files to install in /usr/ports
+DOC            = DOC_CACHE_DIR  + "/docs"     # Files to install in /usr/share/doc/Calmira
+METADATA       = FILES_DIR + "/metadata.json" # Links to Port system and CalmiraLinux documentation packages
+SETTINGS       = "/etc/port-utils.json"       # Program settings
+CALM_RELEASE   = "/etc/calm-release"          # Calmira release info
+DATABASE       = "/var/db/ports/ports.db"     # Port system database
+
+## BASE MESSAGES ##
+OK_MSG   = _("[   ok   ]")
+FAIL_MSG = _("[  FAIL  ]")
+WARN_WSG = _("[  WARN  ]")
+DIALOG_MESSAGE       = _("Continue? (y/n) ")
+CONNECTION_ERROR_MSG = _("Connection error. Check you internet access.")
+CONNECTION_ABORT_MSG = _("The connection was aborted. Check you internet access.")
+
+## Base variables ##
+database_lock_file = "/var/lock/port-utils.lock"
+user_var_dir       = "~/.local/var"
+user_log_dir       = user_var_dir + "/log"
+user_cache_dir     = user_var_dir + "/cache/ports"
+
+# Checking in import
 if __name__ != "__main__":
-    print(_("The executable Port module must not be imported."))
+    print(_("The executable Port program must not be imported!"))
     sys.exit(1)
 
+## COMMAND LINE PARSING ##
+# TODO: сменить парсер аргументов командной строки на свой,
+# либо разобраться с этим: для аргументов, у которых отсутствуют
+# дополнительные значения, убрать их проверку.
+parser = argparse.ArgumentParser(description=_("port-utils - Port system software"),
+                                 epilog=_("Good luck ;)"))
 
-##########################
-##                      ##
-## Command line parsing ##
-##                      ##
-##########################
-
-parser = argparse.ArgumentParser(description='port-utils - Port system software for CalmiraLinux',
-                                 epilog="Good luck ;)")
-
-# Net branch
-parser.add_argument("--tree", "-t",
+# Install or update Port system
+parser.add_argument("--update", "-u",
                     choices=["stable", "testing"],
-                    type=str, help="Net branch from which ports are update")
+                    type=str, help=_("Install or update Port system"))
 
 # Read news
-parser.add_argument("--news",
-                    choices=["stable", "testing"], help="Read news of ports")
+parser.add_argument("--news", "-n",
+                    choices=["stable", "testing"],
+                    help=_("Show the Port system changelog"))
 
 # Install port package
-parser.add_argument("--install", "-i",
-                    type=str, help="Download, build and install port package")
+parser.add_argument("--install", "-i", type=str,
+                    help=_("Download, build and install port package"))
 
-# Remove port package
-parser.add_argument("--remove", "-r",
-                    type=str, help="Remove port package")
+# Remove port
+parser.add_argument("--remove", "-r", type=str,
+                    help=_("Remove port package from system"))
 
-# Show info about port
-parser.add_argument("--info", "-I",
-                    type=str, help="Show info about port (name, version, priority, etc.)")
+# Show info about port package
+parser.add_argument("--info", "-I", type=str,
+                    help=_("Show information about port package"))
 
-# Install documentation
-parser.add_argument("--doc",
-                    choices=["stable", "testing"], help="Download Calmira and Ports System documentation")
+# Install or update Calmira documentation
+parser.add_argument("--doc", "-d", type=str,
+                    choices=["stable", "testing"], help=_("Install or update distro documentation"))
 
-# Debug mode
-parser.add_argument("--debug", "-d",
-                    choices=["yes", "no"],
-                    type=str, help="Displaying debug messages")
+# Update the port-utils metadata
+parser.add_argument("--metadata", type=str,
+                    choices=["stable", "testing"], help=_("Update the port-utils metadata files"))
 
-# Clean
-parser.add_argument("--clear",
+# Clean the CalmiraLinux
+parser.add_argument("--clean", "-c", type=str,
                     choices=["cache", "log", "src", "all"],
-                    type=str, help="Cleaning the system from old ports files")
+                    help=_("Cleaning the CalmiraLinux system from old ports (and other) files"))
 
-# About
-parser.add_argument("--about", "-a",
-                    choices=["gui", "cli"], type=str, help="About program")
-
+# About port-utils
+parser.add_argument("--about", "-a", help=_("About program"))
 
 args = parser.parse_args()
 
 ####################
 ##                ##
-## Main functions ##
+## MAIN FUNCTIONS ##
 ##                ##
 ####################
 
-# Window functions
-class Window(object):
-    # About window
-    def about(mode):
-        about_text = "Utilities for download, install, update, remove ports and check his changelog"
+# About message (for args.about)
+def about_msg():
+    about_title = _("About port-utils")
+    about_text = _("Utilities for download, install, update, remove ports and check his changelog")
 
-        if mode == "gui":
-            window = tk.Tk()
+    print("{0}\n\n {1}".format(about_title, NAME_VERSION))
+    print("\n", about_text)
+    print(_("\n(C) Michail Krasnov <linuxoid85@gmail.com>"))
 
-            window.title("About port-utils")
-            window.resizable(False, False)
+# Print debug messages on screen or in log file
+def print_dbg(message):
+	"""
+    Function for print debug messages on screen or in log file
+    
+    Usage:
+        print_dbg(message)
+    """
+    gid = os.getgid()
+    f = open(SETTINGS, 'r')
+    settings_data = json.load(f)
+    
 
-            frame_first = tk.Frame()
-            label_first = tk.Label(master=frame_first, text=NAME_VERSION)
-            label_first.pack()
+    if settings_data["debug"] == "True":
+        print(message)
 
-            frame_second = tk.Frame()
-            label_second = tk.Label(master=frame_second, text=about_text)
-            label_second.pack()
-
-            frame_third = tk.Frame()
-            label_third = tk.Label(master=frame_third, text="\n(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
-            label_third.pack()
-
-            frame_first.pack()
-            frame_second.pack()
-            frame_third.pack()
-
-            window.mainloop()
-
-        elif mode == "cli":
-            print("About port-utils\n\n", NAME_VERSION)
-            print("\n", about_text)
-            print("\n(C) 2021 Linuxoid85 <linuxoid85@gmail.com>")
-
+    elif settings_data["debug"] == "False":
+        message = message + "\n"
+        if gid == 0:
+            file = open("/var/log/port-utils-dbg.log", 'a')
         else:
-            print(_("Error: unknown operating mode "), mode)
-            exit(1)
+            if os.path.isdir(user_log_dir):
+                pass
+            else:
+                os.makedirs(user_log_dir)
+            
+            dbg_msg_file = user_log_dir + "/port-utils-dbg.log"
+            file = open(dbg_msg_file, "a")
+        
+        for index in message:
+            file.write(index)
 
-# Updating and installing the port
-class Update(object):
-    # Checking for the existence of installed ports
-    def checkInstalledPorts():
+        file.close()
+    else:
+        pass
+    
+    f.close()
+
+# Logging
+def log_msg(message, status):
+    """
+    Function for write messages in log file
+
+    Usage:
+    `log_msg(message, status)`
+
+    Statuses:
+    - 'ok',
+    - 'notice',
+    - 'error',
+    - 'fail',
+    - 'emerge'
+    """
+    log_message = message + " [ " + status + " ]\n" # Формирование сообщения, которое отправится в лог
+    gid = os.getgid()
+
+    if gid == 0:
+        f = open(LOGFILE, "a")
+        for index in log_message:
+            f.write(index)
+    else:
+        if os.path.isdir(user_log_dir):
+            pass
+        else:
+            os.makedirs(user_log_dir)
+        
+        log_msg_user = user_log_dir + "/port-utils.log"
+        f = open(log_msg_user, "a")
+        
+        for index in log_message:
+            f.write(index)
+
+# Dialog message
+def dialog_msg(message=DIALOG_MESSAGE, return_code=0):
+    """
+    Function for print dialog message.
+
+    Usage:
+    `dialog_msg(message=`"message"`, return_code=`"return code (0, 1, 255, etc.)"`)`
+    
+    'message' - str type;
+    'return code' - ONLY int type.
+    """
+    
+    run = input(message)
+    if run == "y" or run == "Y":
+        pass
+    else:
+        sys.exit(return_code)
+
+# Checking to run a function as root
+def check_root():
+    """
+    Function for checking to run a program as root
+    
+    Usage:
+    `check_root()`
+    """
+    
+    message = _("Error: you must run this script as root!")
+    gid = os.getgid()
+    if gid != 0:
+        print(_("\033[31m{}\033[0m").format(message))
+        sys.exit(1)
+
+def check_ports(mode):
+    """
+    Function for check port files
+
+    Usage:
+        * check_ports(mode)
+
+    Work modes:
+        * 'installed_ports' - check the /usr/ports (default) directory;
+        * 'ports_cache'     - check the downloaded Port system package;
+        * 'docs_cache'      - check the downloaded CalmiraLinux documentation package.
+    """
+    if mode == "installed_ports":
         if os.path.isdir(PORTDIR):
-            print(_("The previous version of ports is installed. Removed..."))
-            shutil.rmtree(PORTDIR)
+            log_msg("Removing Port system ('check_ports()')", "notice")
+            print(_("The previous version of the Port system is installed. Removed..."), end = " ")
+            try:
+                shutil.rmtree(PORTDIR)
+                log_msg("Removing OK", "ok")
+                print(OK_MSG)
+            except:
+                log_msg("Removing fail", "FAIL")
+                print(_("Removing error!"))
+                return 1
         else:
-            print(_("No previous ports were found."))
+            print(_("No previous Port system version were found"))
+            return 1
 
-    # Checking for the existence of a port with an archive
-    def checkArchiveCache():
-        if os.path.isfile(CACHE_FILE):
-            print(_("The previous version of the archive with ports was found in the cache. Removed ..."))
-            os.remove(CACHE_FILE)
+    elif mode == "ports_cache":
+        if os.path.isfile(PORT_CACHE):
+            print(_("The previous version of the package with Port system was found in the cache. Removed..."))
+            try:
+                os.remove(PORT_CACHE)
+            except:
+                print(_("Removing error!"))
+                return 1
         else:
-            print(_("No previous version of the ports system was found."))
+            print(_("No previous version of the packages with Port system was found"))
+            return 1
+    
+    elif mode == "docs_cache":
+        # TODO - refract
+        if os.path.isfile(DOC_CACHE):
+            print(_("The previous version of the package with CalmiraLinux documentation was found in the cache. Removed..."))
+            try:
+                os.remove(DOC_CACHE)
+            except:
+                print(_("Removing error!"))
+                return 1
+        else:
+            print(_("No previous version of the package with CalmiraLinux documentation was found"))
+            return 1
 
+##################
+##              ##
+## MAIN CLASSES ##
+##              ##
+##################
+class errors():
+    """
+    Класс для обработки ошибок.
+    
+    Возможности:
+    - Вывод текста ошибки на экран;
+    - Вывод кода ошибки на экран;
+    - Выход из программы при критической ошибке, либо по указанию программиста.
+    
+    Использование:
+    `errors(error, mode)`
+    
+    'error' - название ошибки в текстовом формате.
+    'mode' - нужный режим работы.
+    """
+    def __init__(self, error, mode):
+        errors.check_error(error, mode)
+        
+        error_message = "Error: " + error
+        log_msg(error, "error")
+    
+    def check_error(error, mode):
+        """
+        Function for print error message on screen and/or exit from program.
 
-    # Downloading the port from repositories
-    def downloadPkg(tree, mode):
-        print(_("Job selection..."), end = " ")
+        Usage:
+        
+        `errors.check_error(error, mode="work mode")`
 
+        * 'error' - error name.
+        * 'mode' - work mode.
+        
+        Work modes:
+        * 'force-quit' - force quit;
+        * 'base';
+        
+        Hacking:
+            All errors in '/usr/share/ports/errors.json' file.
+        """
+        
+        error_file = FILES_DIR + "/errors.json"
+
+        try:
+            f = open(error_file, 'r')
+            error_data = json.load(f) # Error list
+        except FileNotFoundError:
+            print(_("File {} not found").format(error_file))
+            return 1
+        
+        ports_settings = open(SETTINGS, 'r')
+        ports_settings_data = json.load(ports_settings) # Program settings
+
+        if ports_settings_data["print_error_message"] == "True":
+            try:
+                print(error_data[error]["message"])
+            except:
+                print(_("No error {} found").format(error))
+                return 1
+        else:
+            pass
+
+        try:
+            print(_("Error code: {}").format(error_data[error]["code"]))
+        except:
+            print(_("No error {} found").format(error))
+        
+        if error_data[error]["exitCode"] == "True" or mode == "force-quit":
+            print(_("Exit from port-utils..."))
+            sys.exit(error_data[error]["returnCode"])
+
+class update_ports():
+    """
+    Class for update Port system and CalmiraLinux documentation
+
+    Usage:
+    
+    `ports(mode, branch)`
+
+    - 'mode' - work mode:
+      - 'port' - download port package,
+      - 'doc' - download documentation package.
+    - 'branch' - download branch:
+      - 'stable',
+      - 'testing'.
+    """
+    def __init__(self, mode, branch):
+        check_root() # Checking for run program as non-root user
+
+        update_ports.update_meta(branch) # Update metadata
+        if update_ports.check_meta():
+            update_ports.get_file(mode, branch)  # Download the required files
+        else:
+            print(_("Метаданные не соответствуют релизу CalmiraLinux!")) # FIXME: translate
+            dialog_msg(return_code=1)
+
+        # Выбор режима работы и нужных переменных.
+        # file - что распаковывать (для unpack_file)
+        # extract_dir - куда распаковывать (для unpack_file);
+        # что копировать (для install_file)
+        # target_dir - куда устанавливать (для install_file)
         if mode == "port":
-            print(_("Port download..."), end = " ")
-
-            f = open(r'/var/cache/ports/ports.txz',"wb")
-            # Ссылка для скачивания стабильной версии портов
-            stable_link = "https://raw.githubusercontent.com/CalmiraLinux/Ports/main/ports-lx4_1.1.txz"
-            # Ссылка для скачивания портов из тестингов
-            unstable_link = "https://raw.githubusercontent.com/CalmiraLinux/Ports/testing/ports-lx4_1.1.txz"
-
+            file = PORT_CACHE
+            extract_dir = PORT_CACHE_DIR
+            target_dir = PORTDIR
         elif mode == "doc":
-            print(_("Documentation download..."), end = " ")
+            file = DOC_CACHE
+            extract_dir = DOC_CACHE_DIR
+            target_dir = DOCDIR
+        else:
+            print(_("Uknown mode for 'ports' class ('__init__' function)"))
+            errors("NoMode", "base")
+        
+        update_ports.unpack_file(file, extract_dir)
+        update_ports.install_file(extract_dir, target_dir)
 
-            f = open(r'/var/cache/ports/docs.txz', "wb")
-            # Ссылка для скачивания стабильной версии документации
-            stable_link = "https://raw.githubusercontent.com/CalmiraLinux/CalmiraLinux/lx4/v1.1/docs/archives/docs.txz"
-            # Ссылка для скачивания нестабильной версии документации
-            # NOTE - на данный момент поддерживается только одна ветка.
-            unstable_link = stable_link
-            # Изменение значения переменной (для тестирования)
-            CACHE_FILE = CACHE + "/docs.txz"
+    def update_meta(branch):
+        """
+        Function for update port-utils metadata
 
+        Files:
+        - `/usr/share/ports/metadata.json` - metadata file.
+
+        Branches:
+        - 'stable',
+        - 'testing'.
+        """
+
+        log_msg("Updating metadata", "notice")
+
+        # Check branches
+        if branch == "stable":
+            content_md = "https://raw.githubusercontent.com/CalmiraLinux/Ports/main/metadata.json"
+        elif branch == "testing":
+            content_md = "https://raw.githubusercontent.com/CalmiraLinux/Ports/testing/metadata.json"
+        else:
+            print(_("Uknown branch {}").format(branch))
+            sys.exit(1)
+        
+
+        if os.path.isfile(METADATA):
+            os.remove(METADATA)
+        else:
+            pass
+
+        # Downloading metadata
+        try:
+            f = open(METADATA, 'r')
+            ufr = requests.get(content_md)
+            f.write(ufr.content)
+            f.close()
+
+        except ConnectionError:
+            print(CONNECTION_ERROR_MSG)
+            errors("NoInternet", "base")
+
+        except ConnectionAbortedError:
+            print(CONNECTION_ABORT_MSG)
+            errors("NoInternet", "base")
+
+        except FileNotFoundError:
+            print(_("File {} not found").format(METADATA))
+            errors("NoFile", "force-quit")
+
+        except:
+            # FIXME: очень часто неправильно выбирается исключение и тип ошибки "Uknown"
+            print(_("Uknown error"))
+            errors("Uknown", "base")
+
+    def check_meta():
+        """
+        Function for check metadata for compatible
+        with CalmiraLinux release
+        """
+        log_msg("Checking metadata compatible with this CalmiraLinux distribution", "notice")
+
+        for file in METADATA, CALM_RELEASE:
+            if os.path.isfile(file):
+                pass
+            else:
+                print(_("File {} not found").format(file))
+                NoFile = True
+        
+        if NoFile:
+            errors("NoFile", "force-quit")
+        
+        f_meta = open(METADATA)
+        metadata = json.load(f_meta)
+
+        f_distro = open(CALM_RELEASE)
+        distro = json.load(f_distro)
+
+        if metadata["system_version"] == distro["distroVersion"]:
+            log_msg("metadata OK", "ok")
+            return_code =  0
+        else:
+            log_msg("metadata FAIL", "FAIL")
+            return_code =  1
+            
+        f_meta.close()
+        f_distro.close()
+        return return_code
+
+    def get_file(mode, branch):
+        """
+        Function for download Port system and CalmiraLinux documentation
+
+        Usage:
+
+        `ports.get_file(mode, branch)`
+
+        * 'mode' - work mode:
+            * 'port' - download port package,
+            * 'doc' - download documentation package.
+        * 'branch' - download branch:
+            * 'stable',
+            * 'testing'.
+        """
+
+        log_message = "Getting file from branch '" + branch + "'"
+        log_msg(log_message, "notice")
+
+        try:
+            pkg_data = open(METADATA, 'r')
+        except FileNotFoundError:
+            log_msg("File not found", "error")
+            print(_("File {} not found").format(METADATA))
+            errors("NoFile", "force-quit")
+        except:
+            log_msg("Uknown error", "error")
+            print(_("Uknown error"))
+            errors("Uknown", "base")
+        
+        package_data = json.load(pkg_data)
 
         # Downloading
-        # Currently the 'stable' and 'testing' branches are supported
-        if tree == "stable":
-            ufr = requests.get(stable_link)
-        elif tree == "testing":
-            ufr = requests.get(unstable_link)
-        elif tree == "list":
-            fp = open("/usr/share/update-ports/branches", "r")
-            print(*fp)
-            fp.close()
+        # TODO: добавить функцию для отображения размера скачиваемого файла.
+        try:
+            if mode == "port" and branch == "stable":
+                f = open(PORT_CACHE, 'r')
+                ufr = requests.get(package_data["ports_stable"])
 
-            exit(0)
+            elif mode == "port" and branch == "testing":
+                f = open(PORT_CACHE, 'r')
+                ufr = requests.get(package_data["ports_unstable"])
 
-        else:
-            print(_("Error! Branch {0} does not exist!").format(tree))
-            exit(1)
+            elif mode == "doc" and branch == "stable":
+                f = open(DOC_CACHE, 'r')
+                ufr = requests.get(package_data["docs_stable"])
 
-        f.write(ufr.content) # Downloading
-        f.close()
+            elif mode == "doc" and branch == "testing":
+                f = open(DOC_CACHE, 'r')
+                ufr = requests.get(package_data["docs_unstable"])
 
-        if os.path.isfile(CACHE_FILE):
-            print(_("Downloaded successfully!"))
-        else:
-            print(_("The file has not been downloaded! Check internet access."))
-            exit(1)
+            else:
+                print(_("Uknown mode or branch for 'download_file'!"))
+                errors("NoMode", "base")
+            
+            f.write(ufr.content)
+            f.close()
 
-    # Unpacking the port
-    def unpackPkg(mode):
-        if mode == "port":
-            cache_file = CACHE_FILE
-            cache_dir = CACHE_PORT_DIR
-        elif mode == "doc":
-            cache_file = CACHE_DOC_FILE
-            cache_dir = CACHE_DOC_DIR
-        else:
-            print(_("Error: uknown option for 'unpackPkg'!"))
-            exit(1)
+        except ConnectionError:
+            log_msg(CONNECTION_ERROR_MSG, "emerg")
+            print(CONNECTION_ERROR_MSG)
+            errors("NoInternet", "base")
 
+        except ConnectionAbortedError:
+            log_msg(CONNECTION_ABORT_MSG, "emerg")
+            print(CONNECTION_ABORT_MSG)
+            errors("NoInternet", "base")
 
-        if os.path.isfile(cache_file):
+        except FileNotFoundError:
+            print(_("File {} not found").format(PORT_CACHE))
+            errors("NoFile", "base")
+
+        except:
+            # FIXME: очень часто неправильно выбирается исключение и тип ошибки "Uknown"
+            print(_("Uknown error"))
+            errors("Uknown", "base")
+    
+    def unpack_file(file, extract_dir):
+        """
+        Function for unpacking files.
+
+        Usage:
+        
+        `ports.unpack_file(mode)`
+
+        Work modes:
+            * 'port' - unpack port system file;
+            * 'doc' - unpack CalmiraLinux documentation file.
+        """
+
+        if os.path.isfile(file):
             try:
-                t = tarfile.open(cache_file, 'r')
-
-                t.extractall(path=cache_dir)
-
-                # Checking for an unpacked directory
-                if os.path.isdir(cache_dir):
-                    print(_("Package unpacked successfully."))
-                else:
-                    print(_("Unknown error, crash."))
-                    exit(1)
+                t = tarfile.open(file, 'r')
+                t.extractall(path=extract_dir)
 
             except ReadError:
-                print(_("Package read error. Perhaps he is broken."))
-                exit(1)
+                print(_("Package read error. Perhaps he is broken"))
+                sys.exit(1)
 
             except CompressionError:
-                print(_("Package unpacking error. The format is not supported."))
-                exit(1)
+                print(_("Package unpacking error. The format is not supported"))
+                sys.exit(1)
+            
+            except:
+                print(_("Uknown error"))
+                sys.exit(1)
         else:
-            print(_("Package unpacking error. Package not found. It may not have been downloaded, or a third-party program changed it's name during unpacking."))
-            exit(1)
+            print(_("Package searching error. He's not found. It may have not been downloaded, or a third-party program changed it's name during unpacking"))
+            sys.exit(1)
+    
+    def install_file(net_dir, target_dir):
+        """
+        Function for install Port system or CalmiraLinux documentation package.
 
-    # Installing the port
-    def installPkg(mode):
-        # Выбор нужных файлов
-        if mode == "port":
-            cache_dir = CACHE_PORT_DIR # Unpacked dir
-            prefix_dir = PORTDIR # Куда распаковать
-            target_file = PORT # Что распаковать
-            target_dir = '/usr/ports' # Куда скопировать
-        elif mode == "doc":
-            cache_dir = CACHE_DOC_DIR # Unpacked dir
-            prefix_dir = DOCDIR # Куда распаковать
-            target_file = DOC # Что распаковать
-            target_dir = DOCDIR # Куда скопировать
+        Usage:
+
+        `update_ports.install_file(net_dir, target_dir)`
+
+        * `net_dir` - что копировать;
+        * `target_dir` - куда копировать.
+        """
+
+        # Checking for a previous version of package
+        if os.path.isdir(target_dir):
+            print(_("Found directory with previous Port system/CalmiraLinux documentation. Removing..."))
+            shutil.rmtree(target_dir)
         else:
-            print(_("Error: uknown option for 'installPkg'!"))
-            exit(1)
-
-        # Checking just in case
-        if os.path.isdir(cache_dir):
-            print(_("Directory with unpacked ports/documentation found, installing..."))
-        else:
-            print(_("Package unpacking error: directory not found."))
-            exit(1)
-
-        # Checking for a previous version of ports
-        if os.path.isdir(prefix_dir):
-            print(_("Found directory with previous ports/documentation version. Removed..."))
-            shutil.rmtree(prefix_dir)
-        else:
-            print(_("No previous ports/documentation were found."))
-
+            pass
+        
         # Copying
-        shutil.copytree(target_file, target_dir)
+        try:
+            print(_("Copying files..."))
+            shutil.copytree(net_dir, target_dir)
+        except:
+            print(_("Uknown error of copy target files"))
+            sys.exit(1)
 
-# Other functions for ports
-class PortFunctions(object):
-    # Checking for the existence of the required file (for cleanSys)
-    # file - check file;
-    # mode - work mode:
-    #   exists     - checking for file existence
-    #   non_exists - check for missing file
-    # TODO - adding a check for file existence
-    def checkDir(file, mode):
-        # Выбор режима работы
-        if mode == "exists":
-            returnVar = 0   # В случае наличия
-            returnUnVar = 1 # В случае отсутствия
-        elif mode == "non_exists":
-            returnVar = 1   # В случае наличия
-            returnUnVar = 0 # В случае отсутствия
-        else:
-            print(_("Error using checkFile: argument {0} for 'mode' does not exist!").format(mode))
-            exit(1)
+class port_functions():
+    """
+    Other functions for Port system
+    """
+    def clean_sys(mode):
+        """
+        Function for cleaning system
 
-        # Проверка
-        if os.path.isdir(file):
-            print(_("Directory {0} is exist").format(file))
-            return(returnVar)
-        else:
-            print(_("Directory {0} does not exist").format(file))
-            return(returnUnVar)
-
-    # Cleaning the system from unnecessary files
-    def cleanSys(mode):
+        Work modes:
+        - `cache` - clean the cache;
+        - `log` - clean the log dir.
+        """
+        
+        check_root()
+        
         if mode == "cache":
             # Очистка кеша
             print(_("Checking for cache existence..."), end = " ")
-            if os.path.isdir(CACHE):
-                print(_("OK"))
 
+            if os.path.isdir(CACHE):
+                print(OK_MSG)
                 print(_("Removing {}...").format(CACHE))
+
                 try:
                     shutil.rmtree(CACHE)
-                except as remove_error:
-                    print(_("Error removing directory {0}: {1}").format(CACHE, remove_error))
+                except:
+                    print(_("Error removing directory {}").format(CACHE))
+                    errors("ErrorRemove", "base")
                 
                 print(_("Make {}...").format(CACHE))
                 try:
                     os.makedirs(CACHE)
-                except as make_error:
-                    print(_("Error making directory {0}: {1}").format(CACHE, make_error))
+                except:
+                    print(_("Error making {}").format(CACHE))
+                    errors("ErrorMake", "base")
             else:
-                print(_("FAIL: Cache directory not found"))
-                exit(1)
+                print(_("Fail: cache directory not found"))
+                errors("NoFile", "base")
 
         elif mode == "log":
-            # Очистка логов
-            print(_("Checking for the existence of log files..."), end = " ")
-            for FILE in LOGFILE, '/var/log/update-ports-dbg.log':
-                if os.path.isfile(FILE):
-                    print(_("File {0}: exists").format(FILE))
-                    os.remove(FILE)
-                else:
-                    print(_("Error: the required file {0} does not exist!").format(FILE))
-                    exit(1)
+            # Очистка лога
+            print(_("Checking for log files existence..."))
 
-                # Проверка на корректное удаление
-                if os.path.isfile(FILE):
-                    print(_("Error: the required file {0} has not been deleted!").format(FILE))
-                    exit(1)
+            for file in LOGFILE, '/var/log/port-utils-dbg.log':
+                print(_("Checking file {}...").format(file), end = " ")
+                if os.path.isfile(file):
+                    print(OK_MSG)
                 else:
-                    print(_("File {0} has deleted succesfully!").format(FILE))
-                    exit(0)
+                    print(FAIL_MSG)
+                    file_not_exists = True
+                
+            if file_not_exists == True:
+                sys.exit(1)
+                
+            try:
+                os.remove(file)
+            except:
+                print(_("Error removing file {}").format(file))
+                errors("ErrorRemove", "base")
 
         elif mode == "src":
-            # Очистка дерева исходных кодов
-            print(_("Checking for the existence of a source tree..."), end = " ")
-            if PortFunctions.checkDir("/usr/src", "exists"):
-                pass
+            # Очистка директории /usr/src
+
+            src_dir = "/usr/src"
+            print(_("Checking for src directory existence..."), end = " ")
+            
+            if os.path.isdir(src_dir):
+                print(OK_MSG)
             else:
-                exit(1)
-
-            shutil.rmtree("/usr/src")
-
-            # Проверка на корректное удаление
-            if PortFunctions.checkDir("/usr/src", "non_exists"):
-                pass
-            else:
-                print(_("Error: the required /usr/src has not been deleted!"))
-                exit(1)
-
-            os.mkdirs("/usr/src")
-
-            exit(0)
-
+                print(FAIL_MSG)
+                file_non_exists = True
+            
+            if file_non_exists = True:
+                sys.exit(1)
+            
+            print(_("Removing {}...").format(src_dir))
+            try:
+                shutil.rmtree(src_dir)
+            except:
+                print(_("Error removing directory {}").format(src_dir))
+                errors("ErrorRemove", "base")
+            
+            print(_("Make {}...").format(src_dir))
+            try:
+                os.makedirs(src_dir)
+            except:
+                print(_("Error making {}").format(src_dir))
+                errors("ErrorMake", "base")
+                
+    
     # News reader
-    def checkNews(tree):
-        f = open(r'/var/cache/ports/news.txt', "wb")
-
-        # Выбор режима работы
-        if tree == "stable":
-            file_branch = "main"
-
-        elif tree == "testing":
-            file_branch = tree
-
+    def check_news(branch):
+        gid = os.getgid()
+        if gid = 0:
+            news_file = "/var/cache/ports/news.txt"
         else:
-            print(_("Error! Branch {} does not exist!").format(tree))
-            exit(1)
+            if os.path.isdir(user_cache_dir):
+                pass
+            else:
+                os.makedirs(user_cache_dir)
+            news_file = user_cache_dir + "/news.txt"
+        
+        f = open(news_file)
 
+        # Checking work mode
+        if branch == "stable":
+            file_branch = "main"
+        elif branch == "testing":
+            file_branch = branch
+        else:
+            print(_("Error! Branch {} doesn't exist!").format(branch))
+            sys.exit(1)
+        
         # Downloading
-        branch = "https://raw.githubusercontent.com/CalmiraLinux/Ports/" + file_branch + "/CHANGELOG.md" # Что скачивать
-
-        ufr = requests.get(branch)
-        f.write(ufr.content)
-
+        branch = "https://raw.githubusercontent.com/CalmiraLinux/Ports/" + file_branch + "/CHANGELOG.md" # Required file
         try:
-            f = open("/var/cache/ports/news.txt", "r")
+            ufr = requests.get(branch)
+            f.write(ufr.content)
+            f.close()
 
-        except FileNotFoundError:
-            print(_("No such file /var/cache/ports/news.txt"))
-            exit(1)
+        except ConnectionError:
+            print(CONNECTION_ERROR_MSG)
+            errors("NoInternet", "base")
 
-        print(*f)
+        except ConnectionAbortedError:
+            print(CONNECTION_ABORT_MSG)
+            errors("NoInternet", "base")
 
+        except:
+            # FIXME: очень часто неправильно выбирается исключение и тип ошибки "Uknown"
+            print(_("Uknown error"))
+            errors("Uknown", "base")
 
+        if os.path.isfile(news_file):
+            pass
+        else:
+            print(_("File {} not found").format(news_file))
+            errors("NoFile", "force-quit")
+
+        # Parsing settings file
+        program_config = open(SETTINGS, 'r')
+        program_config_data = json.load(program_config)
+
+        news_text = program_config_data["pager"] + " " + news_file
+        news_show = subprocess.run(news_text, shell=True)
+
+        # End parsing settings file
+        program_config.close()
+        return news_show.returncode
+
+# Работа с файлами для класса install_ports
+class port_files(object):# Create database
+    def create_db(db):
+        """
+        Function for create database
+
+        Usage:
+        `port_files.create_db(db)`
+
+        - `db` - file with database.
+        """
+
+        if os.path.isfile(db):
+            return 1
+        else:
+            conn   = sqlite3.connect(db)
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                CREATE TABLE ports (
+                    name TEXT, version TEXT, maintainer TEXT,
+                    description TEXT, priority TEXT
+                );
+                INSERT INTO ports VALUES (
+                    'ports', 'lx4/v1.1', 'Linuxoid85', 'Ports system for CalmiraLinux', 'system'
+                );
+                INSERT INTO ports VALUES (
+                    'port-utils', 'v1.0a2', 'Linuxoid85', 'Port system software', 'system'
+                );
+            """)
+            conn.commit()
+    
+    # Lock database
+    def lock_db():
+        """
+        Function for locking database
+
+        Usage:
+        `port_files.lock_db()`
+        """
+        message = "port-utils database was locked\n"
+
+        if os.path.isfile(database_lock_file):
+            print(_("Error: the database already locked!"))
+            errors("DbAlreadyLocked", "no-exit")
+            return 1
+        else:
+            try:
+                f = open(database_lock_file, 'w')
+                for index in message:
+                    f.write(index)
+                return 0
+            except:
+                return 1
+    
+    # Checking lock database
+    def check_lock_db(self):
+        """
+        Function for checking lock database
+
+        Usage:
+        `port_files.check_lock_db()`
+        """
+        if os.path.isfile(database_lock_file):
+            print(_("An instance of the program is already running. Complete it before accessing the database."))
+            return 1
+        else:
+            return 0
+
+class build_ports(object):
+    """
+    Class with functions for building, installing,
+    removing ports packages.
+
+    TODO: add an `__init__()` function for choose work
+    mode and other works...
+    """
+    def __init__(port):
+        # Вычисление данных порта
+        port_path    = PORTDIR   + "/" + port
+        port_json    = port_name + "/config.json"
+        port_install = port_name + "/install"
+        port_remove  = port_name + "/remove"
+        
+        # Вызов нужных функций
+        build_port.check_port(port_path, port_json, port_install, port_remove)
+        
+        print(_("Checking database lock..."))
+        if port_files.check_lock_db():
+            print(OK_MSG)
+            
+            # Building and installing port package
+            build_ports.install_file(port_install)
+            build_ports.add_in_db(port, port_json)
+        else:
+            print(FAIL_MSG)
+            sys.exit(1)
+        
+    # Checking for the existence of a port package
+    def check_port(port_name, json_file,
+                   install_file, remove_file):
+        """
+        Function for checking for the existence of a port package
+
+        Usage:
+        `build_ports.check_port(port)`
+
+        `port` - the required port package
+        """
+
+        # FIXME: переделать алгоритм проверки порта
+
+        # Checking for file existence
+        print(_("Port: {}").format(port_name))
+        
+        for file in json_file, install_file:
+            print(_("Checking {}...").format(file), end = " ")
+            if os.path.isfile(file):
+                print(OK_MSG)
+            else:
+                print(FAIL_MSG)
+                NoFile = True
+        
+        if NoFile:
+            errors("NoFile", "force-quit")
+        
+        print(_("Checking {}...").format(remove_file), end = " ")
+        if os.path.isfile(remove_file):
+            print(OK_MSG)
+            return 0
+        else:
+            print(_("WARNING: there is no file with instructions to remove this port"))
+    
+    # Установка порта
+    def install_port(install_file):
+        install_instruction = install_file + " 2>&1 |tee " + LOGDIR + "/port-utils-build.log"
+        build = subprocess.run(install_instructions, shell=True)
+        
+        return build.returncode
+    
+    # Добавление порта в базу данных
+    def add_in_db(port, json_file):
+        if os.path.isfile(DATABASE):
+            print(_("Adding {} in database...").format(port))
+        else:
+            print(_("Error adding {} in database: database not found!").format(port))
+            return 1
+        
+        file    = open(json_file, "r")
+        package = json.load(file)
+        
+        package_data = [(package["name"], package["version"], package["maintainer"], package["description"], package["priority"])]
+        
+        conn   = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        
+        cursor.execute("INSERT INTO ports VALUES (?,?,?,?,?);", package_data)
+        conn.commit()
 
 #################
 ##             ##
@@ -448,80 +957,44 @@ class PortFunctions(object):
 ##             ##
 #################
 
-# Check for compatibility with Calmira
-if ports.service.getSystem() != "1.1":
-    print(_("\033[31mError: the update-ports version is not compatible with the current Calmira version!\033[0m"))
-    exit(1)
+# Command line parsing
 
-ports.service.getRoot("check")
+if args.update:
+    # Update port system
+    update_ports('port', args.update)
 
-# Command line parsing (2)
-if (args.news):
-    # Initial checks
-    ports.service.printDbg("checkArchiveCache\n")
-    Update.checkArchiveCache()
+elif args.doc:
+    # Update CalmiraLinux documentation
+    update_ports('doc', args.doc)
 
-    # Get change logs
-    ports.service.checkDirs("news")
-    PortFunctions.checkNews(args.news)
+elif args.news:
+    # Port system changelog
+    port_functions.check_news(args.news)
 
-elif (args.tree):
-    # Initial checks
-    ports.service.printDbg("checkDirs\n")
-    ports.service.checkDirs('tree')
-
-    ports.service.printDbg("checkArchiveCache\n")
-    Update.checkArchiveCache()
-
-    ports.service.printDbg("checkInstalledPorts\n")
-    Update.checkInstalledPorts()
-
-    # Download and install
-    ports.service.printDbg("downloadPort\n")
-    Update.downloadPkg(args.tree, "port")
-
-    ports.service.printDbg("unpackPort\n")
-    Update.unpackPkg("port")
-
-    ports.service.printDbg("installPort\n")
-    Update.installPkg("port")
-
-    # Final checks
-    print(_("Checking for correct update..."), end = ' ')
-    if os.path.isdir(PORTDIR):
-        print("ОК")
-        exit(0)
-    else:
-        print(_("NOT FOUND! It is possible that something went wrong during the update."))
-        exit(1)
-
-elif (args.install):
-    ports.InstallPortPKG(args.install)
-
-elif (args.remove):
-    ports.RemovePortPKG(args.remove)
-
-elif (args.info):
-    ports.InfoPortPKG(args.info)
-
-elif (args.doc):
-    ports.service.checkDirs("tree")
-
-    Update.checkArchiveCache()
-
-    Update.downloadPkg(args.doc, "doc")
-    Update.unpackPkg("doc")
-    Update.installPkg("doc")
-
-elif (args.clear):
-    ports.service.printDbg("checkArchiveCache\n")
-
-    Update.checkArchiveCache()
-
-    # Clean the system
-    PortFunctions.cleanSys(args.clear)
+elif args.install:
+    # Install port package
+    print(_("Install"))
     exit(0)
-
-elif (args.about):
-    Window.about(args.about)
+elif args.remove:
+    # Remove port package
+    print(_("Remove"))
     exit(0)
+elif args.info:
+    # Info about port package
+    print(_("Info"))
+    exit(0)
+elif args.metadata:
+    # Get port system metadata
+    update_ports.update_meta(args.metadata)
+
+elif args.clean:
+    # Clean system
+    port_functions.clean_sys(args.clean)
+
+elif args.about:
+    # About port-utils
+    about_msg()
+
+else:
+    print(_("Usage: port-utils -h"))
+    sys.exit(1)
