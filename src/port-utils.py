@@ -121,7 +121,7 @@ parser.add_argument("--clean", "-c", type=str,
                     help=_("Cleaning the CalmiraLinux system from old ports (and other) files"))
 
 # About port-utils
-parser.add_argument("--about", "-a", help=_("About program"))
+parser.add_argument("--about", "-a", help=_("About program"), action="store_true")
 
 args = parser.parse_args()
 
@@ -1055,11 +1055,11 @@ elif args.news:
 
 elif args.install:
     # Install port package
-    print(_("Install"))
+    build_ports(args.install)
     exit(0)
 elif args.remove:
     # Remove port package
-    print(_("Remove"))
+    remove_ports(args.remove)
     exit(0)
 elif args.info:
     # Info about port package

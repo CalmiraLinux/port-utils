@@ -39,3 +39,9 @@ port-utils --install base/editors/emacs
 ```bash
 port-utils --info base/gcc
 ```
+
+## Зависимости
+
+Python Modules:
+- `wget`;
+- `subprocess`.
