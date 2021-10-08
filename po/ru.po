@@ -187,6 +187,38 @@ msgstr "Неизвестная ветка {}"
 msgid "Uknown error"
 msgstr "Неизвестная ошибка"
 
+#: src/port-utils.py:486
+msgid "Updates:"
+msgstr "Обновления портов:"
+
+#: src/port-utils.py:490
+msgid "\nAdditions:"
+msgstr "\nДобавления портов:"
+
+#: src/port-utils.py:494
+msgid "\nDeletions:"
+msgstr "\nУдаления портов:"
+
+#: src/port-utils.py:501
+msgid "The update number of the received metadata is less than the number of the installed ones. This means that you are rolling back the Ports system to a previous version. You may be using the testing branch and installing an update from stable."
+msgstr "Номер обновлений из полученных метаданных меньше номера из установленных. Это означает, что вы откатываете систему Портов до предыдущей версии. Возможно, вы используете тестовую ветку, а устанавливаете обновление из стабильной."
+
+#: src/port-utils.py:505
+msgid "An error occurred while checking for metadata updates. The update number of the metadata received or installed could not be parsed."
+msgstr "Произошла ошибка при проверке метаданных. Не удалось проанализировать номер обновления полученных или установленных метаданных."
+
+#: src/port-utils.py:518
+msgid "File {} deletion error"
+msgstr "Ошибка удаления файла {}"
+
+#: src/port-utils.py:521
+msgid "Updating metadata..."
+msgstr "Обновление метаданных..."
+
+#: src/port-utils.py:525
+msgid "File {} copy error"
+msgstr "Ошибка копирования файла {}"
+
 #: src/port-utils.py:560
 msgid "Uknown mode or branch for 'download_file'!"
 msgstr "Неизвестный режим работы или ветка для 'download_file'!"

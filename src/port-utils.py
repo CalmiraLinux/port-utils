@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # port-utils - Port system software
 # Copyright (C) 2021 Michail Krasnov
@@ -26,7 +26,7 @@ import sys
 import argparse
 import shutil
 import tarfile
-import requests
+import wget
 import json
 import subprocess
 import sqlite3
@@ -39,7 +39,7 @@ _ = gettext.gettext
 
 ## ABOUT PROGRAM ##
 PROGRAM_RELEASE = "alpha build 2"
-NAME_VERSION = "port-utils v1.0 DEV " + PROGRAM_RELEASE # Name + version
+NAME_VERSION = "port-utils v1.0a2 DEV " + PROGRAM_RELEASE # Name + version
 
 ## BASE CONSTANTS ##
 LOGDIR         = "/var/log"                   # Log directory
@@ -140,44 +140,6 @@ def about_msg():
     print("\n", about_text)
     print(_("\n(C) Michail Krasnov <linuxoid85@gmail.com>"))
 
-# Print debug messages on screen or in log file
-def print_dbg(message):
-	"""
-    Function for print debug messages on screen or in log file
-    
-    Usage:
-        print_dbg(message)
-    """
-    gid = os.getgid()
-    f = open(SETTINGS, 'r')
-    settings_data = json.load(f)
-    
-
-    if settings_data["debug"] == "True":
-        print(message)
-
-    elif settings_data["debug"] == "False":
-        message = message + "\n"
-        if gid == 0:
-            file = open("/var/log/port-utils-dbg.log", 'a')
-        else:
-            if os.path.isdir(user_log_dir):
-                pass
-            else:
-                os.makedirs(user_log_dir)
-            
-            dbg_msg_file = user_log_dir + "/port-utils-dbg.log"
-            file = open(dbg_msg_file, "a")
-        
-        for index in message:
-            file.write(index)
-
-        file.close()
-    else:
-        pass
-    
-    f.close()
-
 # Logging
 def log_msg(message, status):
     """
@@ -211,6 +173,34 @@ def log_msg(message, status):
         
         for index in log_message:
             f.write(index)
+
+# Print debug messages
+def print_dbg(message):
+    gid = os.getgid()
+    f = open(SETTINGS, 'r')
+    settings_data = json.load(f)
+
+    if settings_data["debug"] == "True":
+        print(message)
+    else:
+        message = message + "\n"
+        if gid == 0:
+            file = open("/var/log/port-utils-dbg.log", "a")
+        else:
+            if os.path.isdir(user_log_dir):
+                pass
+            else:
+                os.makedirs(user_log_dir)
+            
+            dbg_msg_file = user_log_dir + "/port-utils-dbg.log"
+            file = open(dbg_msg_file, "a")
+
+        for index in message:
+            file.write(index)
+        
+        file.close()
+    
+    f.close()
 
 # Dialog message
 def dialog_msg(message=DIALOG_MESSAGE, return_code=0):
@@ -395,7 +385,7 @@ class update_ports():
         if update_ports.check_meta():
             update_ports.get_file(mode, branch)  # Download the required files
         else:
-            print(_("Метаданные не соответствуют релизу CalmiraLinux!")) # FIXME: translate
+            print(_("The metadata does not match the CalmiraLinux release!")) # FIXME: translate
             dialog_msg(return_code=1)
 
         # Выбор режима работы и нужных переменных.
@@ -441,35 +431,73 @@ class update_ports():
             print(_("Uknown branch {}").format(branch))
             sys.exit(1)
         
+        METADATA_tmp = "/tmp/metadata.json"
 
-        if os.path.isfile(METADATA):
-            os.remove(METADATA)
-        else:
-            pass
+        for file in METADATA, METADATA_tmp:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
 
         # Downloading metadata
         try:
-            f = open(METADATA, 'r')
-            ufr = requests.get(content_md)
-            f.write(ufr.content)
-            f.close()
-
-        except ConnectionError:
-            print(CONNECTION_ERROR_MSG)
-            errors("NoInternet", "base")
-
-        except ConnectionAbortedError:
-            print(CONNECTION_ABORT_MSG)
-            errors("NoInternet", "base")
-
-        except FileNotFoundError:
-            print(_("File {} not found").format(METADATA))
-            errors("NoFile", "force-quit")
+            if os.path.ifsile(METADATA_tmp):
+                os.remove(METADATA_tmp)
+            
+            wget.download(content_md, METADATA_tmp)
 
         except:
-            # FIXME: очень часто неправильно выбирается исключение и тип ошибки "Uknown"
             print(_("Uknown error"))
             errors("Uknown", "base")
+        
+        f_m = open(METADATA_tmp)
+        metadata_file = json.load(f_m)
+        
+        f_i = open(METADATA)
+        metadata_install = json.load(f_i)
+
+        if metadata_file["update_number"] > metadata_install["update_number"]:
+            print(_("There are changes in the Ports system:"))
+
+            print(_("Updates:"))
+            for package in metadata_file["updates"]:
+                print(package)
+            
+            print(_("\nAdditions:"))
+            for package in metadata_file["additions"]:
+                print(package)
+            
+            print(_("\nDeletions:"))
+            for package in metadata_file["deletions"]:
+                print(package)
+            
+            dialog_msg()
+
+        elif metadata_file["update_number"] < metadata_install["update_number"]:
+            print(_("The update number of the received metadata is less than the number of the installed ones. This means that you are rolling back the Ports system to a previous version. You may be using the testing branch and installing an update from stable."))
+            dialog_msg(return_code=1)
+        
+        else:
+            print(_("An error occurred while checking for metadata updates. The update number of the metadata received or installed could not be parsed."))
+            sys.exit(1)
+        
+        f_m.close()
+        f_i.close()
+
+        # Updating metadata
+
+        try:
+            os.remove(METADATA)
+        except:
+            print(_("File {} deletion error").format(METADATA))
+            errors("NoFile", "force-quit")
+        
+        print(_("Updating metadata..."))
+        try:
+            shutil.copy(METADATA_tmp, METADATA)
+        except:
+            print(_("File {} copy error").format(METADATA_tmp))
+            sys.exit(1)
 
     def check_meta():
         """
@@ -539,45 +567,28 @@ class update_ports():
 
         # Downloading
         # TODO: добавить функцию для отображения размера скачиваемого файла.
+        for file in PORT_CACHE, DOC_CACHE:
+            if os.path.isfile(file):
+                os.remove(file)
+        
         try:
             if mode == "port" and branch == "stable":
-                f = open(PORT_CACHE, 'r')
                 download_file = package_data["ports_stable"] + "/" + package_data["port_file"]
-                ufr = requests.get(download_file)
+                wget.download(download_file, PORT_CACHE)
 
             elif mode == "port" and branch == "testing":
-                f = open(PORT_CACHE, 'r')
                 download_file = package_data["ports_unstable"] + "/" + package_data["port_file"]
-                ufr = requests.get(download_file)
+                wget.download(download_file, PORT_CACHE)
 
             elif mode == "doc" and branch == "stable":
-                f = open(DOC_CACHE, 'r')
-                ufr = requests.get(package_data["docs_stable"])
+                wget.download(package_data["docs_stable"], DOC_CACHE)
 
             elif mode == "doc" and branch == "testing":
-                f = open(DOC_CACHE, 'r')
-                ufr = requests.get(package_data["docs_unstable"])
+                wget.download(package_data["docs_unstable"], DOC_CACHE)
 
             else:
                 print(_("Uknown mode or branch for 'download_file'!"))
                 errors("NoMode", "base")
-            
-            f.write(ufr.content)
-            f.close()
-
-        except ConnectionError:
-            log_msg(CONNECTION_ERROR_MSG, "emerg")
-            print(CONNECTION_ERROR_MSG)
-            errors("NoInternet", "base")
-
-        except ConnectionAbortedError:
-            log_msg(CONNECTION_ABORT_MSG, "emerg")
-            print(CONNECTION_ABORT_MSG)
-            errors("NoInternet", "base")
-
-        except FileNotFoundError:
-            print(_("File {} not found").format(PORT_CACHE))
-            errors("NoFile", "base")
 
         except:
             # FIXME: очень часто неправильно выбирается исключение и тип ошибки "Uknown"
@@ -716,7 +727,7 @@ class port_functions():
                 print(FAIL_MSG)
                 file_non_exists = True
             
-            if file_non_exists = True:
+            if file_non_exists == True:
                 sys.exit(1)
             
             print(_("Removing {}...").format(src_dir))
@@ -735,18 +746,20 @@ class port_functions():
                 
     
     # News reader
-    def check_news(branch):
+    def check_news(branch):   
         gid = os.getgid()
-        if gid = 0:
+        if gid == 0:
             news_file = "/var/cache/ports/news.txt"
         else:
             if os.path.isdir(user_cache_dir):
                 pass
             else:
                 os.makedirs(user_cache_dir)
+
             news_file = user_cache_dir + "/news.txt"
         
-        f = open(news_file)
+        if os.path.isfile(news_file):
+            os.remove(news_file)
 
         # Checking work mode
         if branch == "stable":
@@ -759,23 +772,10 @@ class port_functions():
         
         # Downloading
         branch = "https://raw.githubusercontent.com/CalmiraLinux/Ports/" + file_branch + "/CHANGELOG.md" # Required file
-        try:
-            ufr = requests.get(branch)
-            f.write(ufr.content)
-            f.close()
-
-        except ConnectionError:
-            print(CONNECTION_ERROR_MSG)
-            errors("NoInternet", "base")
-
-        except ConnectionAbortedError:
-            print(CONNECTION_ABORT_MSG)
-            errors("NoInternet", "base")
-
-        except:
-            # FIXME: очень часто неправильно выбирается исключение и тип ошибки "Uknown"
-            print(_("Uknown error"))
-            errors("Uknown", "base")
+        
+        print(_("Download file {}").format(news_file))
+        wget.download(branch, news_file)
+        print("\n")
 
         if os.path.isfile(news_file):
             pass
@@ -1078,11 +1078,9 @@ elif args.metadata:
     update_ports.update_meta(args.metadata)
 
 elif args.clean:
-    # Clean system
     port_functions.clean_sys(args.clean)
 
 elif args.about:
-    # About port-utils
     about_msg()
 
 else:
