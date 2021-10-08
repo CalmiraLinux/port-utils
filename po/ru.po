@@ -279,7 +279,7 @@ msgstr ""
 "Другой экземпляр программы уже запущен. Завершите всё до получения "
 "доступа к базе данных."
 
-#: src/port-utils.py:882
+#: src/port-utils.py:882 src/port-utils.py:969
 msgid "Checking database lock..."
 msgstr "Проверка на блокировку БД..."
 
@@ -318,3 +318,11 @@ msgstr "Информация"
 #: src/port-utils.py:999
 msgid "Usage: port-utils -h"
 msgstr "Использование: port-utils -h"
+
+#: src/port-utils.py:1026
+msgid "Removing {} from database..."
+msgstr "Удаление {} из базы данных..."
+
+#: src/port-utils.py:1028
+msgid "Error removing {} from database: database not found!"
+msgstr "Ошибка удаления {} из баны данных: БД не существует!"

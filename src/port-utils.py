@@ -542,11 +542,13 @@ class update_ports():
         try:
             if mode == "port" and branch == "stable":
                 f = open(PORT_CACHE, 'r')
-                ufr = requests.get(package_data["ports_stable"])
+                download_file = package_data["ports_stable"] + "/" + package_data["port_file"]
+                ufr = requests.get(download_file)
 
             elif mode == "port" and branch == "testing":
                 f = open(PORT_CACHE, 'r')
-                ufr = requests.get(package_data["ports_unstable"])
+                download_file = package_data["ports_unstable"] + "/" + package_data["port_file"]
+                ufr = requests.get(download_file)
 
             elif mode == "doc" and branch == "stable":
                 f = open(DOC_CACHE, 'r')
@@ -872,9 +874,9 @@ class build_ports(object):
     def __init__(port):
         # Вычисление данных порта
         port_path    = PORTDIR   + "/" + port
-        port_json    = port_name + "/config.json"
-        port_install = port_name + "/install"
-        port_remove  = port_name + "/remove"
+        port_json    = port_path + "/config.json"
+        port_install = port_path + "/install"
+        port_remove  = port_path + "/remove"
         
         # Вызов нужных функций
         build_port.check_port(port_path, port_json, port_install, port_remove)
@@ -949,6 +951,94 @@ class build_ports(object):
         cursor = conn.cursor()
         
         cursor.execute("INSERT INTO ports VALUES (?,?,?,?,?);", package_data)
+        conn.commit()
+
+def remove_ports():
+    # Класс для удаления порта из системы.
+    # TODO: добавить логирование
+    def __init__(port):
+        # Вычисление данных порта
+        port_path   = PORTDIR   + "/" + port
+        port_json   = port_path + "/config.json"
+        port_remove = port_path + "/remove"
+        
+        # Вызов нужных функций
+        if remove_ports.check_remove_port(port_path, port_json, port_remove):
+            pass
+        else:
+            sys.exit(1)
+        
+        print(_("Checking database lock..."))
+        if port_files.check_lock_db():
+            print(OK_MSG)
+            
+            # Removing port
+            remove_ports.remove_port(port_remove)
+            remove_ports.remove_from_db(port_path, port_json)
+        else:
+            print(FAIL_MSG)
+            sys.exit(1)
+        
+    def check_remove_port(port_name, json_file, remove_file):
+        """
+        Function for checking for the existence of a port package
+        
+        Usage:
+        `remove_ports.check_remove_port(...)`
+        """
+        print(_("Port: {}").format(port_name))
+        
+        for file in json_file, remove_file:
+            print(_("Checking {}...").format(file), end = " ")
+            if os.path.isfile(file):
+                print(OK_MSG)
+            else:
+                print(FAIL_MSG)
+                NoFile = True
+        
+        if NoFile:
+            errors("NoFile", "force-quit")
+        else:
+            return 0
+
+    def remove_port(remove_file):
+        """
+        Function for remove port from system
+        
+        Usage:
+        `remove_ports.remove_port(file)`
+        """
+        
+        remove_instructions = remove_file + " 2>&1 |tee " + LOGDIR + "/port-utils-remove.log"
+        remove = subprocess.run(remove_instructions, shell = True)
+        
+        return remove.returncode
+        
+    def remove_from_db(port, json_file):
+        """
+        Function for remove port package from database
+        
+        Usage:
+            remove_ports.remove_from_db(port)
+            
+            'port' - port name (e.g. base/editors/emacs)
+        """
+        
+        if os.path.isfile(DATABASE):
+            print(_("Removing {} from database...").format(port))
+        else:
+            print(_("Error removing {} from database: database not found!").format(port))
+            return 1
+        
+        file    = open(json_file, "r")
+        package = json.load(file)
+        
+        package_data = [(package["name"])]
+        
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        
+        cursor.execute("DELETE FROM ports WHERE name=?", package_data)
         conn.commit()
 
 #################
