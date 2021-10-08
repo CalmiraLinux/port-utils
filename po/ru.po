@@ -200,12 +200,12 @@ msgid "\nDeletions:"
 msgstr "\nУдаления портов:"
 
 #: src/port-utils.py:501
-msgid "The update number of the received metadata is less than the number of the installed ones. This means that you are rolling back the Ports system to a previous version. You may be using the testing branch and installing an update from stable."
-msgstr "Номер обновлений из полученных метаданных меньше номера из установленных. Это означает, что вы откатываете систему Портов до предыдущей версии. Возможно, вы используете тестовую ветку, а устанавливаете обновление из стабильной."
+msgid "\nThe update number of the received metadata is less than the number of the installed ones. This means that you are rolling back the Ports system to a previous version. You may be using the testing branch and installing an update from stable."
+msgstr "\nНомер обновлений из полученных метаданных меньше номера из установленных. Это означает, что вы откатываете систему Портов до предыдущей версии. Возможно, вы используете тестовую ветку, а устанавливаете обновление из стабильной."
 
 #: src/port-utils.py:505
-msgid "An error occurred while checking for metadata updates. The update number of the metadata received or installed could not be parsed."
-msgstr "Произошла ошибка при проверке метаданных. Не удалось проанализировать номер обновления полученных или установленных метаданных."
+msgid "\nAn error occurred while checking for metadata updates. The update number of the metadata received or installed could not be parsed."
+msgstr "\nПроизошла ошибка при проверке метаданных. Не удалось проанализировать номер обновления полученных или установленных метаданных."
 
 #: src/port-utils.py:518
 msgid "File {} deletion error"
