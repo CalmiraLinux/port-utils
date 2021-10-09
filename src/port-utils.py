@@ -309,12 +309,21 @@ class errors():
     'mode' - нужный режим работы.
     """
     def __init__(self, error, mode):
-        errors.check_error(error, mode)
-        
-        error_message = "Error: " + error
-        log_msg(error, "error")
+        self.error = error
+        self.mode = mode
+
+        errors.Error(error, mode)
     
-    def check_error(error, mode):
+    def Error(self, error, mode):
+        self.error = error
+        self.mode = mode
+
+        errors.check_error(error, mode)
+
+        error_message = "Error: " + error
+        log_msg(error_message, "error")
+    
+    def check_error(self, error, mode):
         """
         Function for print error message on screen and/or exit from program.
 
@@ -332,6 +341,9 @@ class errors():
         Hacking:
             All errors in '/usr/share/ports/errors.json' file.
         """
+
+        self.error = error
+        self.mode = mode
         
         error_file = FILES_DIR + "/errors.json"
 
@@ -347,23 +359,23 @@ class errors():
 
         if ports_settings_data["print_error_message"] == "True":
             try:
-                print(error_data[error]["message"])
+                print(error_data[self.error]["message"])
             except:
-                print(_("No error {} found").format(error))
+                print(_("No error {} found").format(self.error))
                 return 1
         else:
             pass
 
         try:
-            print(_("Error code: {}").format(error_data[error]["code"]))
+            print(_("Error code: {}").format(error_data[self.error]["code"]))
         except:
-            print(_("No error {} found").format(error))
+            print(_("No error {} found").format(self.error))
         
-        if error_data[error]["exitCode"] == "True" or mode == "force-quit":
+        if error_data[self.error]["exitCode"] == "True" or self.mode == "force-quit":
             print(_("Exit from port-utils..."))
-            sys.exit(error_data[error]["returnCode"])
+            sys.exit(error_data[self.error]["returnCode"])
 
-class update_ports():
+class update_ports(object):
     """
     Class for update Port system and CalmiraLinux documentation
 
@@ -379,6 +391,9 @@ class update_ports():
       - 'testing'.
     """
     def __init__(self, mode, branch):
+        self.mode = mode
+        self.branch = branch
+
         check_root() # Checking for run program as non-root user
 
         update_ports.update_meta(branch) # Update metadata
@@ -408,7 +423,7 @@ class update_ports():
         update_ports.unpack_file(file, extract_dir)
         update_ports.install_file(extract_dir, target_dir)
 
-    def update_meta(branch):
+    def update_meta(self, branch):
         """
         Function for update port-utils metadata
 
@@ -419,6 +434,8 @@ class update_ports():
         - 'stable',
         - 'testing'.
         """
+
+        self.branch = branch
 
         log_msg("Updating metadata", "notice")
 
@@ -444,11 +461,13 @@ class update_ports():
         
         f_m = open(METADATA_tmp)
         metadata_file = json.load(f_m)
-        
-        f_i = open(METADATA)
-        metadata_install = json.load(f_i)
 
-        if metadata_file["update_number"] > metadata_install["update_number"]:
+        f_i = open(METADATA)
+        metadata_file_install = json.load(f_i)
+        
+        metadata_install = metadata_file_install["update_number"]
+
+        if metadata_file["update_number"] > metadata_install:
             print(_("\nThere are changes in the Ports system:"))
 
             print(_("Updates:"))
@@ -465,7 +484,7 @@ class update_ports():
             
             dialog_msg()
 
-        elif metadata_file["update_number"] < metadata_install["update_number"]:
+        elif metadata_file["update_number"] < metadata_install:
             print(_("\nThe update number of the received metadata is less than the number of the installed ones. This means that you are rolling back the Ports system to a previous version. You may be using the testing branch and installing an update from stable."))
             dialog_msg(return_code=1)
         
@@ -477,7 +496,6 @@ class update_ports():
         f_i.close()
 
         # Updating metadata
-
         try:
             os.remove(METADATA)
         except:
@@ -491,7 +509,7 @@ class update_ports():
             print(_("File {} copy error").format(METADATA_tmp))
             sys.exit(1)
 
-    def check_meta():
+    def check_meta(self):
         """
         Function for check metadata for compatible
         with CalmiraLinux release
@@ -525,7 +543,7 @@ class update_ports():
         f_distro.close()
         return return_code
 
-    def get_file(mode, branch):
+    def get_file(self, mode, branch):
         """
         Function for download Port system and CalmiraLinux documentation
 
@@ -540,6 +558,9 @@ class update_ports():
             * 'stable',
             * 'testing'.
         """
+
+        self.mode = mode
+        self.branch = branch
 
         log_message = "Getting file from branch '" + branch + "'"
         log_msg(log_message, "notice")
@@ -587,7 +608,7 @@ class update_ports():
             print(_("Uknown error"))
             errors("Uknown", "base")
     
-    def unpack_file(file, extract_dir):
+    def unpack_file(self, file, extract_dir):
         """
         Function for unpacking files.
 
@@ -600,16 +621,19 @@ class update_ports():
             * 'doc' - unpack CalmiraLinux documentation file.
         """
 
+        self.file = file
+        self.extract_dir = extract_dir
+
         if os.path.isfile(file):
             try:
                 t = tarfile.open(file, 'r')
                 t.extractall(path=extract_dir)
 
-            except ReadError:
+            except tarfile.ReadError:
                 print(_("Package read error. Perhaps he is broken"))
                 sys.exit(1)
 
-            except CompressionError:
+            except tarfile.CompressionError:
                 print(_("Package unpacking error. The format is not supported"))
                 sys.exit(1)
             
@@ -620,7 +644,7 @@ class update_ports():
             print(_("Package searching error. He's not found. It may have not been downloaded, or a third-party program changed it's name during unpacking"))
             sys.exit(1)
     
-    def install_file(net_dir, target_dir):
+    def install_file(self, net_dir, target_dir):
         """
         Function for install Port system or CalmiraLinux documentation package.
 
@@ -631,6 +655,9 @@ class update_ports():
         * `net_dir` - что копировать;
         * `target_dir` - куда копировать.
         """
+
+        self.net_dir = net_dir
+        self.target_dir = target_dir
 
         # Checking for a previous version of package
         if os.path.isdir(target_dir):
@@ -651,7 +678,7 @@ class port_functions():
     """
     Other functions for Port system
     """
-    def clean_sys(mode):
+    def clean_sys(self, mode):
         """
         Function for cleaning system
 
@@ -659,6 +686,8 @@ class port_functions():
         - `cache` - clean the cache;
         - `log` - clean the log dir.
         """
+
+        self.mode = mode
         
         check_root()
         
@@ -738,7 +767,9 @@ class port_functions():
                 
     
     # News reader
-    def check_news(branch):   
+    def check_news(self, branch): 
+        self.branch = branch
+
         gid = os.getgid()
         if gid == 0:
             news_file = "/var/cache/ports/news.txt"
@@ -788,7 +819,7 @@ class port_functions():
 
 # Работа с файлами для класса install_ports
 class port_files(object):# Create database
-    def create_db(db):
+    def create_db(self, db):
         """
         Function for create database
 
@@ -797,6 +828,8 @@ class port_files(object):# Create database
 
         - `db` - file with database.
         """
+
+        self.db = db
 
         if os.path.isfile(db):
             return 1
@@ -819,7 +852,7 @@ class port_files(object):# Create database
             conn.commit()
     
     # Lock database
-    def lock_db():
+    def lock_db(self):
         """
         Function for locking database
 
@@ -863,7 +896,9 @@ class build_ports(object):
     TODO: add an `__init__()` function for choose work
     mode and other works...
     """
-    def __init__(port):
+    def __init__(self, port):
+        self.port = port
+
         # Вычисление данных порта
         port_path    = PORTDIR   + "/" + port
         port_json    = port_path + "/config.json"
@@ -885,7 +920,7 @@ class build_ports(object):
             sys.exit(1)
         
     # Checking for the existence of a port package
-    def check_port(port_name, json_file,
+    def check_port(self, port_name, json_file,
                    install_file, remove_file):
         """
         Function for checking for the existence of a port package
@@ -895,6 +930,11 @@ class build_ports(object):
 
         `port` - the required port package
         """
+
+        self.port_name = port_name
+        self.json_file = json_file
+        self.install_file = install_file
+        self.remove_file = remove_file
 
         # FIXME: переделать алгоритм проверки порта
 
@@ -920,14 +960,19 @@ class build_ports(object):
             print(_("WARNING: there is no file with instructions to remove this port"))
     
     # Установка порта
-    def install_port(install_file):
+    def install_port(self, install_file):
+        self.install_file = install_file
+
         install_instruction = install_file + " 2>&1 |tee " + LOGDIR + "/port-utils-build.log"
-        build = subprocess.run(install_instructions, shell=True)
+        build = subprocess.run(install_instruction, shell=True)
         
         return build.returncode
     
     # Добавление порта в базу данных
-    def add_in_db(port, json_file):
+    def add_in_db(self, port, json_file):
+        self.port = port
+        self.json_file = json_file
+
         if os.path.isfile(DATABASE):
             print(_("Adding {} in database...").format(port))
         else:
@@ -948,7 +993,9 @@ class build_ports(object):
 def remove_ports():
     # Класс для удаления порта из системы.
     # TODO: добавить логирование
-    def __init__(port):
+    def __init__(self, port):
+        self.port = port
+
         # Вычисление данных порта
         port_path   = PORTDIR   + "/" + port
         port_json   = port_path + "/config.json"
@@ -971,13 +1018,18 @@ def remove_ports():
             print(FAIL_MSG)
             sys.exit(1)
         
-    def check_remove_port(port_name, json_file, remove_file):
+    def check_remove_port(self, port_name, json_file, remove_file):
         """
         Function for checking for the existence of a port package
         
         Usage:
         `remove_ports.check_remove_port(...)`
         """
+
+        self.port_name = port_name
+        self.json_file = json_file
+        self.remove_file = remove_file
+
         print(_("Port: {}").format(port_name))
         
         for file in json_file, remove_file:
@@ -993,20 +1045,22 @@ def remove_ports():
         else:
             return 0
 
-    def remove_port(remove_file):
+    def remove_port(self, remove_file):
         """
         Function for remove port from system
         
         Usage:
         `remove_ports.remove_port(file)`
         """
+
+        self.remove_file = remove_file
         
         remove_instructions = remove_file + " 2>&1 |tee " + LOGDIR + "/port-utils-remove.log"
         remove = subprocess.run(remove_instructions, shell = True)
         
         return remove.returncode
         
-    def remove_from_db(port, json_file):
+    def remove_from_db(self, port, json_file):
         """
         Function for remove port package from database
         
@@ -1015,6 +1069,9 @@ def remove_ports():
             
             'port' - port name (e.g. base/editors/emacs)
         """
+
+        self.port = port
+        self.json_file = json_file
         
         if os.path.isfile(DATABASE):
             print(_("Removing {} from database...").format(port))
