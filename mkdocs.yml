@@ -6,4 +6,5 @@ nav:
   - Работа с системой портов:
     - Введение: ports/intro.md
     - Обновление СП: ports/update-ports.md
+    - Обновление документации CalmiraLinux: ports/update-docs.md
 theme: readthedocs

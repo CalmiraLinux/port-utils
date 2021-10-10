@@ -45,3 +45,7 @@ port-utils --info base/gcc
 Python Modules:
 - `wget`;
 - `subprocess`.
+
+## Документация
+
+Раздел документации доступен [здесь](site/intro/index.html)
