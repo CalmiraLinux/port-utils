@@ -1,0 +1,9 @@
+site_name: port-utils
+nav:
+  - Введение:
+    - Введение в port-utils: intro.md
+    - Использование: usage.md
+  - Работа с системой портов:
+    - Введение: ports/intro.md
+    - Обновление СП: ports/update-ports.md
+theme: readthedocs
