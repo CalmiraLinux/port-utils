@@ -187,6 +187,10 @@ msgstr "Неизвестная ветка {}"
 msgid "Uknown error"
 msgstr "Неизвестная ошибка"
 
+#: src/port-utils.py:503
+msgid "Number of changes: {}\n"
+msgstr "Список изменений: {}\n"
+
 #: src/port-utils.py:486
 msgid "Updates:"
 msgstr "Обновления портов:"

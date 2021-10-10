@@ -482,24 +482,26 @@ class update_ports(object):
         wget.download(content_md, METADATA_tmp)
 
         # Checking
-        f_i = open(METADATA)
-        metadata_file_install = json.load(f_i)
-        
-        metadata_install = update_ports.check_update_meta(METADATA_tmp)
+        f_i = open(METADATA_tmp)
+        metadata_file = json.load(f)
+        metadata_install = update_ports.check_update_meta(METADATA)
 
-        if metadata_file_install["update_number"] > metadata_install:
-            print(_("\nThere are changes in the Ports system:"))
+        if metadata_file["update_number"] > metadata_install:
+            print(_("\nThere are chenges in the Ports system:"))
             changes = True
         
         elif metadata_file["update_number"] < metadata_install:
             print(_("\nThe update number of the received metadata is less than the number of the installed ones. This means that you are rolling back the Ports system to a previous version. You may be using the testing branch and installing an update from stable."))
             dialog_msg(return_code=1)
-        
+
         else:
             print(_("\nAn error occurred while checking for metadata updates. The update number of the metadata received or installed could not be parsed."))
             sys.exit(1)
 
         if changes:
+            difference = metadata_file["update_number"] - update_ports.check_update_meta(METADATA)
+            print(_("Number of changes: {}\n").format(difference))
+
             print(_("Updates:"))
             for package in metadata_file["updates"]:
                 print(package)
