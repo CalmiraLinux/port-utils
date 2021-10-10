@@ -422,6 +422,28 @@ class update_ports(object):
         
         update_ports.unpack_file(file, extract_dir)
         update_ports.install_file(extract_dir, target_dir)
+    
+    def check_update_meta(self, metadata):
+        """
+        Function for checking update_number
+
+        Usage:
+        `check_update_meta(metadata)`
+
+        `metadata` - metadata file (e.g. /tmp/metadata.json)
+        """
+
+        self.metadata = metadata
+
+        if os.path.isfile(metadata):
+            f = open(metadata, 'r')
+        else:
+            # TODO: добавить сообщение об ошибке
+            return 1
+        
+        meta_data = json.load(f)
+
+        return meta_data["update_number"]
 
     def update_meta(self, branch):
         """
@@ -458,18 +480,26 @@ class update_ports(object):
         if os.path.isfile(METADATA_tmp):
             os.remove(METADATA_tmp)
         wget.download(content_md, METADATA_tmp)
-        
-        f_m = open(METADATA_tmp)
-        metadata_file = json.load(f_m)
 
+        # Checking
         f_i = open(METADATA)
         metadata_file_install = json.load(f_i)
         
-        metadata_install = metadata_file_install["update_number"]
+        metadata_install = update_ports.check_update_meta(METADATA_tmp)
 
-        if metadata_file["update_number"] > metadata_install:
+        if metadata_file_install["update_number"] > metadata_install:
             print(_("\nThere are changes in the Ports system:"))
+            changes = True
+        
+        elif metadata_file["update_number"] < metadata_install:
+            print(_("\nThe update number of the received metadata is less than the number of the installed ones. This means that you are rolling back the Ports system to a previous version. You may be using the testing branch and installing an update from stable."))
+            dialog_msg(return_code=1)
+        
+        else:
+            print(_("\nAn error occurred while checking for metadata updates. The update number of the metadata received or installed could not be parsed."))
+            sys.exit(1)
 
+        if changes:
             print(_("Updates:"))
             for package in metadata_file["updates"]:
                 print(package)
@@ -483,16 +513,7 @@ class update_ports(object):
                 print(package)
             
             dialog_msg()
-
-        elif metadata_file["update_number"] < metadata_install:
-            print(_("\nThe update number of the received metadata is less than the number of the installed ones. This means that you are rolling back the Ports system to a previous version. You may be using the testing branch and installing an update from stable."))
-            dialog_msg(return_code=1)
         
-        else:
-            print(_("\nAn error occurred while checking for metadata updates. The update number of the metadata received or installed could not be parsed."))
-            sys.exit(1)
-        
-        f_m.close()
         f_i.close()
 
         # Updating metadata
