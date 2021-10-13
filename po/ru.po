@@ -189,7 +189,19 @@ msgstr "Неизвестная ошибка"
 
 #: src/port-utils.py:503
 msgid "Number of changes: {}\n"
-msgstr "Список изменений: {}\n"
+msgstr "Количество изменений: {}\n"
+
+#: src/port-utils.py:509
+msgid "Changes in the current update:"
+msgstr "Изменения в текущем обновлении:"
+
+#: src/port-utils.py:532
+msgid "Changes in previous missed updates:"
+msgstr "Обновления в предыдущих пропущенных обновлениях:"
+
+#: src/port-utils.py:554
+msgid "Error: old metadata file doesn't been downloaded!"
+msgstr "Ошибка: старые файлы метаданных не были скачаны!"
 
 #: src/port-utils.py:486
 msgid "Updates:"

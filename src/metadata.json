@@ -3,5 +3,6 @@
     "ports_stable": "https://github.com/CalmiraLinux/Ports/raw/stable",
     "ports_unstable": "https://github.com/CalmiraLinux/Ports/raw/testing",
     "port_file": "ports-lx4_1.1.txz",
-    "update_number": 1
+    "update_number": 1,
+    "prev": "55786e00fc886ff680b415854e978dd01a33c3bc"
 }

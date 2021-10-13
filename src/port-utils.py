@@ -66,6 +66,9 @@ WARN_WSG = _("[  WARN  ]")
 DIALOG_MESSAGE       = _("Continue? (y/n) ")
 CONNECTION_ERROR_MSG = _("Connection error. Check you internet access.")
 CONNECTION_ABORT_MSG = _("The connection was aborted. Check you internet access.")
+UPDATE_MSG    = _("Updates")
+ADDITIONS_MSG = _("\nAdditions")
+DELETIONS_MSG = _("\nDeletions")
 
 ## Base variables ##
 database_lock_file = "/var/lock/port-utils.lock"
@@ -221,19 +224,22 @@ def dialog_msg(message=DIALOG_MESSAGE, return_code=0):
         sys.exit(return_code)
 
 # Checking to run a function as root
-def check_root():
+def check_root(v_exit=True):
     """
     Function for checking to run a program as root
     
     Usage:
-    `check_root()`
+    `check_root(v_exit=False)`
     """
     
     message = _("Error: you must run this script as root!")
     gid = os.getgid()
     if gid != 0:
-        print(_("\033[31m{}\033[0m").format(message))
-        sys.exit(1)
+        if v_exit:
+            print(_("\033[31m{}\033[0m").format(message))
+            sys.exit(1)
+        else:
+            return 1
 
 def check_ports(mode):
     """
@@ -390,9 +396,9 @@ class update_ports(object):
       - 'stable',
       - 'testing'.
     """
-    def __init__(self, mode, branch):
-        self.mode = mode
-        self.branch = branch
+    def __init__(mode, branch):
+        #self.mode = mode
+        #self.branch = branch
 
         check_root() # Checking for run program as non-root user
 
@@ -423,6 +429,20 @@ class update_ports(object):
         update_ports.unpack_file(file, extract_dir)
         update_ports.install_file(extract_dir, target_dir)
     
+    def print_changes(self, change, message):
+        """
+        Function for printing information about changes to stdout.
+
+        Usage:
+        `update_ports.print_changes(change, message)`
+        """
+        
+        self.change = change
+        self.message = message
+
+        for package in change:
+            print("{0}: {1}".format(change, message))
+
     def check_update_meta(self, metadata):
         """
         Function for checking update_number
@@ -436,15 +456,14 @@ class update_ports(object):
         self.metadata = metadata
 
         if os.path.isfile(metadata):
-            f = open(metadata, 'r')
+            f = open(metadata, "r")
         else:
-            # TODO: добавить сообщение об ошибке
+            print(_("File {} not found").format(metadata))
             return 1
         
         meta_data = json.load(f)
-
         return meta_data["update_number"]
-
+    
     def update_meta(self, branch):
         """
         Function for update port-utils metadata
@@ -476,14 +495,15 @@ class update_ports(object):
             os.remove(METADATA_tmp)
 
         # Downloading metadata
-        #try:
         if os.path.isfile(METADATA_tmp):
             os.remove(METADATA_tmp)
+        
         wget.download(content_md, METADATA_tmp)
 
         # Checking
         f_i = open(METADATA_tmp)
-        metadata_file = json.load(f)
+        metadata_file = json.load(f_i)
+
         metadata_install = update_ports.check_update_meta(METADATA)
 
         if metadata_file["update_number"] > metadata_install:
@@ -496,41 +516,45 @@ class update_ports(object):
 
         else:
             print(_("\nAn error occurred while checking for metadata updates. The update number of the metadata received or installed could not be parsed."))
+            f_i.close()
             sys.exit(1)
-
+        
         if changes:
             difference = metadata_file["update_number"] - update_ports.check_update_meta(METADATA)
             print(_("Number of changes: {}\n").format(difference))
 
-            print(_("Updates:"))
-            for package in metadata_file["updates"]:
-                print(package)
+            print(_("Changes in the current update:"))
+            #print(_("Updates:"))
+            update_ports.print_changes(metadata_file["updates"], UPDATE_MSG)        # Updates
+            update_ports.print_changes(metadata_file["additions"], ADDITIONS_MSG)   # Additions
+            update_ports.print_changes(metadata_file["deletions"], DELETIONS_MSG)   # Deletions
+
+            print(_("Changes in previous missed updates:"))
+            f_i.close()
             
-            print(_("\nAdditions:"))
-            for package in metadata_file["additions"]:
-                print(package)
-            
-            print(_("\nDeletions:"))
-            for package in metadata_file["deletions"]:
-                print(package)
+            file = "https://github.com/CalmiraLinux/Ports/raw/" + metadata_file["prev"] + "/metadata.json"
+            while i <= difference:
+                if os.path.isfile(METADATA_tmp):
+                    os.remove(METADATA_tmp)
+                
+                wget.download(file, METADATA_tmp)
+
+                if os.path.isfile(METADATA_tmp):
+                    f_i = open(METADATA_tmp, "r")
+                    metadata_file = json.load(f_i)
+
+                    print(_("Update hash: {}").format(metadata_file["prev"]))
+
+                    update_ports.print_changes(metadata_file["updates"], UPDATE_MSG)
+                    update_ports.print_changes(metadata_file["additions"], ADDITIONS_MSG)
+                    update_ports.print_changes(metadata_file["deletions"], DELETIONS_MSG)
+
+                    f_i.close()
+                else:
+                    print(_("Error: old metadata file doesn't been downloaded!"))
+                    sys.exit(1)
             
             dialog_msg()
-        
-        f_i.close()
-
-        # Updating metadata
-        try:
-            os.remove(METADATA)
-        except:
-            print(_("File {} deletion error").format(METADATA))
-            errors("NoFile", "force-quit")
-        
-        print(_("Updating metadata..."))
-        try:
-            shutil.copy(METADATA_tmp, METADATA)
-        except:
-            print(_("File {} copy error").format(METADATA_tmp))
-            sys.exit(1)
 
     def check_meta(self):
         """
@@ -929,7 +953,7 @@ class build_ports(object):
         port_remove  = port_path + "/remove"
         
         # Вызов нужных функций
-        build_port.check_port(port_path, port_json, port_install, port_remove)
+        build_ports.check_port(port_path, port_json, port_install, port_remove)
         
         print(_("Checking database lock..."))
         if port_files.check_lock_db():
@@ -1013,7 +1037,7 @@ class build_ports(object):
         cursor.execute("INSERT INTO ports VALUES (?,?,?,?,?);", package_data)
         conn.commit()
 
-def remove_ports():
+class remove_ports(object):
     # Класс для удаления порта из системы.
     # TODO: добавить логирование
     def __init__(self, port):
@@ -1112,6 +1136,36 @@ def remove_ports():
         
         cursor.execute("DELETE FROM ports WHERE name=?", package_data)
         conn.commit()
+
+class update_data(object):
+    """
+    Class for updating ports packages and other files
+    """
+    def update_port(self, port):
+        """
+        Function for update port package
+
+        Usage:
+        `update_data.update_port(portname)`
+
+        - `portname` e.g. base/editors/vim
+        """
+
+        self.port   = port
+        port_path   = PORTDIR   + "/" + port
+        port_json   = port_path + "/config.json"
+
+        print(_("Checking database lock..."))
+        if port_files.check_lock_db():
+            print(OK_MSG)
+
+            # Removing port
+            remove_ports.remove_from_db(port_path, port_json)
+        else:
+            print(FAIL_MSG)
+            sys.exit(0)
+        
+        build_ports(port)
 
 #################
 ##             ##
