@@ -351,13 +351,29 @@ msgstr "Добавление {} в базу данных..."
 msgid "Error adding {} in database: database not found!"
 msgstr "Ошибка добавления {} в базу данных: БД не существует!"
 
-#: src/port-utils.py:976
-msgid "Install"
-msgstr "Установка"
+#: src/port-utils.py:1192
+msgid "Name: {}"
+msgstr "Имя: {}"
 
-#: src/port-utils.py:980
-msgid "Remove"
-msgstr "Удаление"
+#: src/port-utils.py:1193
+msgid "Version: {}"
+msgstr "Версия: {}"
+
+#: src/port-utils.py:1194
+msgid "Maintainer: {}"
+msgstr "Сопровождающий: {}"
+
+#: src/port-utils.py:1195
+msgid "Priority: {}"
+msgstr "Приоритет: {}"
+
+#: src/port-utils.py:1196
+msgid "Calmira release: {}"
+msgstr "Релиз Calmira: {}"
+
+#: src/port-utils.py:1197
+msgid "Deps: {}"
+msgstr "Зависимости: {}"
 
 #: src/port-utils.py:984
 msgid "Info"

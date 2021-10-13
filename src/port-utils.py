@@ -440,8 +440,11 @@ class update_ports(object):
         self.change = change
         self.message = message
 
-        for package in change:
-            print("{0}: {1}".format(change, message))
+        try:
+            for package in change:
+                print("{0}: {1}".format(change, message))
+        except:
+            print(_("Uknown error"))
 
     def check_update_meta(self, metadata):
         """
@@ -1166,6 +1169,36 @@ class update_data(object):
             sys.exit(0)
         
         build_ports(port)
+
+class info_ports(object):
+    def __init__(self, port):
+        self.port    = port
+
+        port_name    = PORTDIR   + "/" + port
+        port_json    = port_name + "/config.json"
+        port_install = port_name + "/install"
+        port_remove  = port_name + "/remove"
+
+        build_ports.check_port(port_name, port_json, install_file, remove_file)
+
+        info_ports.info_port(port_json)
+    
+    def info_port(port_json):
+        # Base information
+        try:
+            f = open(port_json)
+            port_data = json.load(f)
+
+            print(_("Name: {}").format(port_data["name"]))
+            print(_("Version: {}").format(port_data["version"]))
+            print(_("Maintainer: {}").format(port_data["maintainer"]))
+            print(_("Priority: {}").format(port_data["priority"]))
+            print(_("Calmira release: {}").format((port_data["release"])))
+            print(_("Deps: {}").format(port_data["deps"]))
+
+        except:
+            print(_("Uknown error"))
+            sys.exit(1)
 
 #################
 ##             ##
