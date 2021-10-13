@@ -38,8 +38,8 @@ gettext.textdomain('port-utils')
 _ = gettext.gettext
 
 ## ABOUT PROGRAM ##
-PROGRAM_RELEASE = "alpha build 2"
-NAME_VERSION = "port-utils v1.0a2 DEV " + PROGRAM_RELEASE # Name + version
+PROGRAM_RELEASE = "beta build 1"
+NAME_VERSION = "port-utils v1.0b1 DEV " + PROGRAM_RELEASE # Name + version
 
 ## BASE CONSTANTS ##
 LOGDIR         = "/var/log"                   # Log directory
