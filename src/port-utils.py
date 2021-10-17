@@ -970,8 +970,12 @@ class build_ports(object):
         if port_files.check_lock_db():
             print(OK_MSG)
             
-            # Building and installing port package
+            # Print deps
+            print(_("These dependencies need to be satisfied (installed) before or after building the port {}:").format(port))
             build_ports.print_deps(port_json)
+            dialog_msg(return_code=1)
+
+            # Building and installing port package
             build_ports.install_file(port_install)
             build_ports.add_in_db(port, port_json)
         else:
@@ -1035,7 +1039,14 @@ class build_ports(object):
         print(_("Maintainer: {}").format(port_data["maintainer"]))
         print(_("Priority: {}").format(port_data["priority"]))
         print(_("Calmira release: {}").format((port_data["release"])))
-        print(_("Deps: {}").format(port_data["deps"]))
+        
+        print(_("Depends:"))
+        print(_("Required: \n{}").format(port_data["deps"]["required"]))
+        print(_("Runtime: \n{}").format(port_data["deps"]["runtime"]))
+        print(_("Optional: \n{}").format(port_data["deps"]["optional"]))
+        print(_("Recommend: \n{}").format(port_data["deps"]["recommend"]))
+        print(_("Before: \n{}").format(port_data["deps"]["before"]))
+        print(_("Conflicts: \n{}").format(port_data["deps"]["conflict"]))
 
         f.close()
 
@@ -1093,6 +1104,11 @@ class remove_ports(object):
         print(_("Checking database lock..."))
         if port_files.check_lock_db():
             print(OK_MSG)
+
+            # Print depends
+            print(_("These dependencies need to be satisfied (removed) before or after removing the installed port {}:").format(port))
+            build_ports.print_deps(port_json)
+            dialog_msg(return_code=1)
             
             # Removing port
             remove_ports.remove_port(port_remove)
@@ -1226,8 +1242,15 @@ class info_ports(object):
             print(_("Version: {}").format(port_data["version"]))
             print(_("Maintainer: {}").format(port_data["maintainer"]))
             print(_("Priority: {}").format(port_data["priority"]))
-            print(_("Calmira release: {}").format((port_data["release"])))
-            print(_("Deps: {}").format(port_data["deps"]))
+            print(_("Calmira release: {}").format(port_data["release"]))
+            
+            print(_("Depends:"))
+            print(_("Required: \n{}").format(port_data["deps"]["required"]))
+            print(_("Runtime: \n{}").format(port_data["deps"]["runtime"]))
+            print(_("Optional: \n{}").format(port_data["deps"]["optional"]))
+            print(_("Recommend: \n{}").format(port_data["deps"]["recommend"]))
+            print(_("Before: \n{}").format(port_data["deps"]["before"]))
+            print(_("Conflicts: \n{}").format(port_data["deps"]["conflict"]))
 
             f.close()
 

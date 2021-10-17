@@ -355,6 +355,18 @@ msgstr "Добавление {} в базу данных..."
 msgid "Error adding {} in database: database not found!"
 msgstr "Ошибка добавления {} в базу данных: БД не существует!"
 
+#: src/port-utils.py:974
+msgid "These dependencies need to be satisfied (installed) before or after building the port {}:"
+msgstr "Эти зависимости необходимо удовлетворить (установить) до или после сборки порта {}:"
+
+#: src/port-utils.py:1104
+msgid "These dependencies need to be satisfied (removed) before or after removing the installed port {}:"
+msgstr "Эти зависимости необходимо удовлетворить (удалить) до или после удаления установленного порта {}:"
+
+#: src/port-utils.py:1231
+msgid "Depends:"
+msgstr "Зависимости:"
+
 #: src/port-utils.py:1192
 msgid "Name: {}"
 msgstr "Имя: {}"
@@ -375,9 +387,29 @@ msgstr "Приоритет: {}"
 msgid "Calmira release: {}"
 msgstr "Релиз Calmira: {}"
 
-#: src/port-utils.py:1197
-msgid "Deps: {}"
-msgstr "Зависимости: {}"
+#: src/port-utils.py:1232
+msgid "Required: \n{}"
+msgstr "Необходимые: \n{}"
+
+#: src/port-utils.py:1233
+msgid "Runtime: \n{}"
+msgstr "Runtime: \n{}"
+
+#: src/port-utils.py:1234
+msgid "Optional: \n{}"
+msgstr "Опциональные: \n{}"
+
+#: src/port-utils.py:1235
+msgid "Recommend: \n{}"
+msgstr "Рекомендуемые: \n{}"
+
+#: src/port-utils.py:1236
+msgid "Before: \n{}"
+msgstr "Перед этим: \n{}"
+
+#: src/port-utils.py:1237
+msgid "Conflicts: \n{}"
+msgstr "Конфликты: \n{}"
 
 #: src/port-utils.py:984
 msgid "Info"
