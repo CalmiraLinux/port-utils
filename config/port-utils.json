@@ -1,5 +1,6 @@
 {
     "debug": "False",
     "print_error_message": "False",
-    "pager": "/usr/bin/less"
+    "pager": "/usr/bin/less",
+    "downgrade_with_update": "False"
 }

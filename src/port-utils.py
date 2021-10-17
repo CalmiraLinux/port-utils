@@ -66,9 +66,9 @@ WARN_WSG = _("[  WARN  ]")
 DIALOG_MESSAGE       = _("Continue? (y/n) ")
 CONNECTION_ERROR_MSG = _("Connection error. Check you internet access.")
 CONNECTION_ABORT_MSG = _("The connection was aborted. Check you internet access.")
-UPDATE_MSG    = _("Updates")
-ADDITIONS_MSG = _("\nAdditions")
-DELETIONS_MSG = _("\nDeletions")
+UPDATE_MSG    = _("Updates:")
+ADDITIONS_MSG = _("\nAdditions:")
+DELETIONS_MSG = _("\nDeletions:")
 
 ## Base variables ##
 database_lock_file = "/var/lock/port-utils.lock"
@@ -493,9 +493,6 @@ class update_ports(object):
             sys.exit(1)
         
         METADATA_tmp = "/tmp/metadata_tmp.json"
-        
-        if os.path.isfile(METADATA_tmp):
-            os.remove(METADATA_tmp)
 
         # Downloading metadata
         if os.path.isfile(METADATA_tmp):
@@ -504,13 +501,19 @@ class update_ports(object):
         wget.download(content_md, METADATA_tmp)
 
         # Checking
-        f_i = open(METADATA_tmp)
-        metadata_file = json.load(f_i)
+        try:
+            f_i = open(METADATA_tmp)
+            metadata_file = json.load(f_i)
+        except FileNotFoundError:
+            print(_("File {} not found").format(METADATA_tmp))
+            sys.exit(1)
+        except:
+            print(_("Uknown error"))
+            sys.exit(1)
 
         metadata_install = update_ports.check_update_meta(METADATA)
 
         if metadata_file["update_number"] > metadata_install:
-            print(_("\nThere are chenges in the Ports system:"))
             changes = True
         
         elif metadata_file["update_number"] < metadata_install:
@@ -546,7 +549,7 @@ class update_ports(object):
                     f_i = open(METADATA_tmp, "r")
                     metadata_file = json.load(f_i)
 
-                    print(_("Update hash: {}").format(metadata_file["prev"]))
+                    print(_("\nUpdate ID: {}").format(metadata_file["prev"]))
 
                     update_ports.print_changes(metadata_file["updates"], UPDATE_MSG)
                     update_ports.print_changes(metadata_file["additions"], ADDITIONS_MSG)
@@ -629,7 +632,6 @@ class update_ports(object):
         package_data = json.load(pkg_data)
 
         # Downloading
-        # TODO: добавить функцию для отображения размера скачиваемого файла.
         for file in PORT_CACHE, DOC_CACHE:
             if os.path.isfile(file):
                 os.remove(file)
@@ -884,23 +886,29 @@ class port_files(object):# Create database
         if os.path.isfile(db):
             return 1
         else:
-            conn   = sqlite3.connect(db)
-            cursor = conn.cursor()
+            try:
+                conn   = sqlite3.connect(db, timeout=3)
+                cursor = conn.cursor()
 
-            cursor.execute("""
-                CREATE TABLE ports (
-                    name TEXT, version TEXT, maintainer TEXT,
-                    description TEXT, priority TEXT
-                );
-                INSERT INTO ports VALUES (
-                    'ports', 'lx4/v1.1', 'Linuxoid85', 'Ports system for CalmiraLinux', 'system'
-                );
-                INSERT INTO ports VALUES (
-                    'port-utils', 'v1.0a2', 'Linuxoid85', 'Port system software', 'system'
-                );
-            """)
-            conn.commit()
+                cursor.execute("""
+                    CREATE TABLE ports (
+                        name TEXT, version TEXT, maintainer TEXT,
+                        description TEXT, priority TEXT
+                    );
+                    INSERT INTO ports VALUES (
+                        'ports', 'lx4/v1.1', 'Linuxoid85', 'Ports system for CalmiraLinux', 'system'
+                    );
+                    INSERT INTO ports VALUES (
+                        'port-utils', 'v1.0a2', 'Linuxoid85', 'Port system software', 'system'
+                    );
+                """)
+                conn.commit()
+                cursor.close()
+            
+            except sqlite3.Error as error:
+                print(_("SQLite3 connection error: {}").format(error))
     
+    # FIXME: убрать устаревшие функции
     # Lock database
     def lock_db(self):
         """
@@ -963,6 +971,7 @@ class build_ports(object):
             print(OK_MSG)
             
             # Building and installing port package
+            build_ports.print_deps(port_json)
             build_ports.install_file(port_install)
             build_ports.add_in_db(port, port_json)
         else:
@@ -1009,6 +1018,30 @@ class build_ports(object):
         else:
             print(_("WARNING: there is no file with instructions to remove this port"))
     
+    # Вывод зависимостей порта
+    def print_deps(self, port_json):
+        self.port_json = port_json
+
+        try:
+            f = open(port_json, "r")
+        except FileNotFoundError:
+            print(_("File {} not found").format(port_json))
+            sys.exit(1)
+        
+        port_data = json.load(f)
+
+        print(_("Name: {}").format(port_data["name"]))
+        print(_("Version: {}").format(port_data["version"]))
+        print(_("Maintainer: {}").format(port_data["maintainer"]))
+        print(_("Priority: {}").format(port_data["priority"]))
+        print(_("Calmira release: {}").format((port_data["release"])))
+        print(_("Deps: {}").format(port_data["deps"]))
+
+        f.close()
+
+        dialog_msg(return_code=1)
+
+
     # Установка порта
     def install_port(self, install_file):
         self.install_file = install_file
@@ -1195,6 +1228,8 @@ class info_ports(object):
             print(_("Priority: {}").format(port_data["priority"]))
             print(_("Calmira release: {}").format((port_data["release"])))
             print(_("Deps: {}").format(port_data["deps"]))
+
+            f.close()
 
         except:
             print(_("Uknown error"))

@@ -235,6 +235,10 @@ msgstr "Обновление метаданных..."
 msgid "File {} copy error"
 msgstr "Ошибка копирования файла {}"
 
+#: src/port-utils.py:549
+msgid "\nUpdate ID: {}"
+msgstr "\nID обновления: {}"
+
 #: src/port-utils.py:560
 msgid "Uknown mode or branch for 'download_file'!"
 msgstr "Неизвестный режим работы или ветка для 'download_file'!"
