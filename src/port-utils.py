@@ -946,6 +946,56 @@ class port_files(object):# Create database
         else:
             return 0
 
+class info_ports(object):
+    def __init__(self, port, only_deps=False):
+        self.port    = port
+
+        port_name    = PORTDIR   + "/" + port
+        port_json    = port_name + "/config.json"
+
+        build_ports.check_port(port_name, port_json)
+
+        info_ports.info_port(port_json, only_deps)
+    
+    def info_port(port_json, only_deps=False):
+        # Base information
+        try:
+            f = open(port_json)
+        except FileNotFoundError:
+            print(_("File {} not found").format(port_json))
+            sys.exit(1)
+        
+        try:
+            port_data = json.load(f)
+
+            if only_deps == False:
+                print(_("Name: {}").format(port_data["name"]))
+                print(_("Version: {}").format(port_data["version"]))
+                print(_("Maintainer: {}").format(port_data["maintainer"]))
+                print(_("Priority: {}").format(port_data["priority"]))
+                print(_("Calmira release: {}").format(port_data["release"]))
+            
+            # FIXME: добавить проверку на наличие определённой
+            # категории зависимостей, т.к. в config.json могут
+            # отсутствовать некоторые поля, которые выводятся здесь.
+            print(_("Depends:"))
+            print(_("Required: \n{}").format(port_data["deps"]["required"]))
+            print(_("Runtime: \n{}").format(port_data["deps"]["runtime"]))
+            print(_("Optional: \n{}").format(port_data["deps"]["optional"]))
+            print(_("Recommend: \n{}").format(port_data["deps"]["recommend"]))
+            print(_("Before: \n{}").format(port_data["deps"]["before"]))
+            print(_("Conflicts: \n{}").format(port_data["deps"]["conflict"]))
+
+            return_code = 0
+
+        except:
+            print(_("Uknown error"))
+            return_code = 1
+        
+        finally:
+            f.close()
+            sys.exit(return_code)
+
 class build_ports(object):
     """
     Class with functions for building, installing,
@@ -972,7 +1022,7 @@ class build_ports(object):
             
             # Print deps
             print(_("These dependencies need to be satisfied (installed) before or after building the port {}:").format(port))
-            build_ports.print_deps(port_json)
+            info_ports(port, only_deps=True)
             dialog_msg(return_code=1)
 
             # Building and installing port package
@@ -1021,36 +1071,6 @@ class build_ports(object):
             return 0
         else:
             print(_("WARNING: there is no file with instructions to remove this port"))
-    
-    # Вывод зависимостей порта
-    def print_deps(self, port_json):
-        self.port_json = port_json
-
-        try:
-            f = open(port_json, "r")
-        except FileNotFoundError:
-            print(_("File {} not found").format(port_json))
-            sys.exit(1)
-        
-        port_data = json.load(f)
-
-        print(_("Name: {}").format(port_data["name"]))
-        print(_("Version: {}").format(port_data["version"]))
-        print(_("Maintainer: {}").format(port_data["maintainer"]))
-        print(_("Priority: {}").format(port_data["priority"]))
-        print(_("Calmira release: {}").format((port_data["release"])))
-        
-        print(_("Depends:"))
-        print(_("Required: \n{}").format(port_data["deps"]["required"]))
-        print(_("Runtime: \n{}").format(port_data["deps"]["runtime"]))
-        print(_("Optional: \n{}").format(port_data["deps"]["optional"]))
-        print(_("Recommend: \n{}").format(port_data["deps"]["recommend"]))
-        print(_("Before: \n{}").format(port_data["deps"]["before"]))
-        print(_("Conflicts: \n{}").format(port_data["deps"]["conflict"]))
-
-        f.close()
-
-        dialog_msg(return_code=1)
 
 
     # Установка порта
@@ -1107,7 +1127,7 @@ class remove_ports(object):
 
             # Print depends
             print(_("These dependencies need to be satisfied (removed) before or after removing the installed port {}:").format(port))
-            build_ports.print_deps(port_json)
+            info_ports(port, only_deps=True)
             dialog_msg(return_code=1)
             
             # Removing port
@@ -1211,6 +1231,11 @@ class update_data(object):
         if port_files.check_lock_db():
             print(OK_MSG)
 
+            # Print deps
+            print(_("These dependencies need to be satisfied (updated) before or after update port {}:").format(port))
+            info_ports(port, only_deps=True)
+            dialog_msg(return_code=1)
+
             # Removing port
             remove_ports.remove_from_db(port_path, port_json)
         else:
@@ -1218,45 +1243,6 @@ class update_data(object):
             sys.exit(0)
         
         build_ports(port)
-
-class info_ports(object):
-    def __init__(self, port):
-        self.port    = port
-
-        port_name    = PORTDIR   + "/" + port
-        port_json    = port_name + "/config.json"
-        port_install = port_name + "/install"
-        port_remove  = port_name + "/remove"
-
-        build_ports.check_port(port_name, port_json, install_file, remove_file)
-
-        info_ports.info_port(port_json)
-    
-    def info_port(port_json):
-        # Base information
-        try:
-            f = open(port_json)
-            port_data = json.load(f)
-
-            print(_("Name: {}").format(port_data["name"]))
-            print(_("Version: {}").format(port_data["version"]))
-            print(_("Maintainer: {}").format(port_data["maintainer"]))
-            print(_("Priority: {}").format(port_data["priority"]))
-            print(_("Calmira release: {}").format(port_data["release"]))
-            
-            print(_("Depends:"))
-            print(_("Required: \n{}").format(port_data["deps"]["required"]))
-            print(_("Runtime: \n{}").format(port_data["deps"]["runtime"]))
-            print(_("Optional: \n{}").format(port_data["deps"]["optional"]))
-            print(_("Recommend: \n{}").format(port_data["deps"]["recommend"]))
-            print(_("Before: \n{}").format(port_data["deps"]["before"]))
-            print(_("Conflicts: \n{}").format(port_data["deps"]["conflict"]))
-
-            f.close()
-
-        except:
-            print(_("Uknown error"))
-            sys.exit(1)
 
 #################
 ##             ##
@@ -1288,7 +1274,7 @@ elif args.remove:
     exit(0)
 elif args.info:
     # Info about port package
-    print(_("Info"))
+    info_ports(args.info)
     exit(0)
 elif args.metadata:
     # Get port system metadata

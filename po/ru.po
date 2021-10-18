@@ -363,6 +363,10 @@ msgstr "Эти зависимости необходимо удовлетвор�
 msgid "These dependencies need to be satisfied (removed) before or after removing the installed port {}:"
 msgstr "Эти зависимости необходимо удовлетворить (удалить) до или после удаления установленного порта {}:"
 
+#: src/port-utils.py:1232
+msgid "These dependencies need to be satisfied (updated) before or after update port {}:"
+msgstr "Эти зависимости необходимо удовлетворить (обновить) до или после обновления порта {}:"
+
 #: src/port-utils.py:1231
 msgid "Depends:"
 msgstr "Зависимости:"
