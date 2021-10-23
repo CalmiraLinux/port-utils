@@ -227,7 +227,7 @@ def check_root(v_exit=True):
     gid = os.getgid()
     if gid != 0:
         if v_exit:
-            print(_("\033[31m{}\033[0m").format(message))
+            print("\033[31m{}\033[0m".format(message))
             sys.exit(1)
         else:
             return 1
@@ -242,7 +242,6 @@ def check_ports(mode):
     Work modes:
         * 'installed_ports' - check the /usr/ports (default) directory;
         * 'ports_cache'     - check the downloaded Port system package;
-        * 'docs_cache'      - check the downloaded CalmiraLinux documentation package.
     """
     if mode == "installed_ports":
         if os.path.isdir(PORTDIR):
@@ -270,19 +269,6 @@ def check_ports(mode):
                 return 1
         else:
             print(_("No previous version of the packages with Port system was found"))
-            return 1
-    
-    elif mode == "docs_cache":
-        # TODO - refract
-        if os.path.isfile(DOC_CACHE):
-            print(_("The previous version of the package with CalmiraLinux documentation was found in the cache. Removed..."))
-            try:
-                os.remove(DOC_CACHE)
-            except:
-                print(_("Removing error!"))
-                return 1
-        else:
-            print(_("No previous version of the package with CalmiraLinux documentation was found"))
             return 1
 
 ##################
@@ -381,44 +367,23 @@ class update_ports(object):
     `ports(mode, branch)`
 
     - 'mode' - work mode:
-      - 'port' - download port package,
-      - 'doc' - download documentation package.
+      - 'port' - download port package.
     - 'branch' - download branch:
       - 'stable',
       - 'testing'.
     """
-    def __init__(mode, branch):
-        #self.mode = mode
-        #self.branch = branch
-
+    def __init__(branch):
         check_root() # Checking for run program as non-root user
 
         update_ports.update_meta(branch) # Update metadata
         if update_ports.check_meta():
-            update_ports.get_file(mode, branch)  # Download the required files
+            update_ports.get_file(branch)  # Download the required files
         else:
             print(_("The metadata does not match the CalmiraLinux release!")) # FIXME: translate
             dialog_msg(return_code=1)
-
-        # Выбор режима работы и нужных переменных.
-        # file - что распаковывать (для unpack_file)
-        # extract_dir - куда распаковывать (для unpack_file);
-        # что копировать (для install_file)
-        # target_dir - куда устанавливать (для install_file)
-        if mode == "port":
-            file = PORT_CACHE
-            extract_dir = PORT_CACHE_DIR
-            target_dir = PORTDIR
-        elif mode == "doc":
-            file = DOC_CACHE
-            extract_dir = DOC_CACHE_DIR
-            target_dir = DOCDIR
-        else:
-            print(_("Uknown mode for 'ports' class ('__init__' function)"))
-            errors("NoMode", "base")
         
-        update_ports.unpack_file(file, extract_dir)
-        update_ports.install_file(extract_dir, target_dir)
+        update_ports.unpack_file(PORT_CACHE, PORT_CACHE_DIR)
+        update_ports.install_file(PORT_CACHE_DIR, PORTDIR)
     
     def print_changes(self, change, message):
         """
@@ -456,7 +421,9 @@ class update_ports(object):
             return 1
         
         meta_data = json.load(f)
-        return meta_data["update_number"]
+        yield meta_data["update_number"]
+
+        f.close()
     
     def update_meta(self, branch):
         """
@@ -587,23 +554,18 @@ class update_ports(object):
         f_distro.close()
         return return_code
 
-    def get_file(self, mode, branch):
+    def get_file(self, branch):
         """
         Function for download Port system and CalmiraLinux documentation
 
         Usage:
 
         `ports.get_file(mode, branch)`
-
-        * 'mode' - work mode:
-            * 'port' - download port package,
-            * 'doc' - download documentation package.
         * 'branch' - download branch:
             * 'stable',
             * 'testing'.
         """
 
-        self.mode = mode
         self.branch = branch
 
         log_message = "Getting file from branch '" + branch + "'"
@@ -628,19 +590,13 @@ class update_ports(object):
                 os.remove(file)
         
         try:
-            if mode == "port" and branch == "stable":
+            if branch == "stable":
                 download_file = package_data["ports_stable"] + "/" + package_data["port_file"]
                 wget.download(download_file, PORT_CACHE)
 
-            elif mode == "port" and branch == "testing":
+            elif branch == "testing":
                 download_file = package_data["ports_unstable"] + "/" + package_data["port_file"]
                 wget.download(download_file, PORT_CACHE)
-
-            elif mode == "doc" and branch == "stable":
-                wget.download(package_data["docs_stable"], DOC_CACHE)
-
-            elif mode == "doc" and branch == "testing":
-                wget.download(package_data["docs_unstable"], DOC_CACHE)
 
             else:
                 print(_("Uknown mode or branch for 'download_file'!"))
@@ -658,10 +614,6 @@ class update_ports(object):
         Usage:
         
         `ports.unpack_file(mode)`
-
-        Work modes:
-            * 'port' - unpack port system file;
-            * 'doc' - unpack CalmiraLinux documentation file.
         """
 
         self.file = file
@@ -919,11 +871,11 @@ class info_ports(object):
             # отсутствовать некоторые поля, которые выводятся здесь.
             print(_("Depends:"))
             print(_("Required: \n{}").format(port_data["deps"]["required"]))
-            print(_("Runtime: \n{}").format(port_data["deps"]["runtime"]))
-            print(_("Optional: \n{}").format(port_data["deps"]["optional"]))
-            print(_("Recommend: \n{}").format(port_data["deps"]["recommend"]))
-            print(_("Before: \n{}").format(port_data["deps"]["before"]))
-            print(_("Conflicts: \n{}").format(port_data["deps"]["conflict"]))
+            print(_("\nRuntime: \n{}").format(port_data["deps"]["runtime"]))
+            print(_("\nOptional: \n{}").format(port_data["deps"]["optional"]))
+            print(_("\nRecommend: \n{}").format(port_data["deps"]["recommend"]))
+            print(_("\nBefore: \n{}").format(port_data["deps"]["before"]))
+            print(_("\nConflicts: \n{}").format(port_data["deps"]["conflict"]))
 
             return_code = 0
 
@@ -1059,6 +1011,13 @@ class remove_ports(object):
             pass
         else:
             sys.exit(1)
+
+        f = open(port_remove)
+        portData = json.load(f)
+
+        if portData["priority"] == "system":
+            print(_("This port package is systemic and cannot be removed"))
+            sys.exit(1)
         
         print(_("Checking database lock..."))
         if port_files.check_lock_db():
@@ -1193,11 +1152,7 @@ class update_data(object):
 
 if args.update:
     # Update port system
-    update_ports('port', args.update)
-
-elif args.doc:
-    # Update CalmiraLinux documentation
-    update_ports('doc', args.doc)
+    update_ports(args.update)
 
 elif args.install:
     # Install port package

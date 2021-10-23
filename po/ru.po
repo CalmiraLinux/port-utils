@@ -363,6 +363,10 @@ msgstr "Эти зависимости необходимо удовлетвор�
 msgid "These dependencies need to be satisfied (removed) before or after removing the installed port {}:"
 msgstr "Эти зависимости необходимо удовлетворить (удалить) до или после удаления установленного порта {}:"
 
+#: src/port-utils.py:1108
+msgid "This port package is systemic and cannot be removed"
+msgstr "Этот пакет является системным и не может быть удалён"
+
 #: src/port-utils.py:1232
 msgid "These dependencies need to be satisfied (updated) before or after update port {}:"
 msgstr "Эти зависимости необходимо удовлетворить (обновить) до или после обновления порта {}:"
@@ -396,24 +400,24 @@ msgid "Required: \n{}"
 msgstr "Необходимые: \n{}"
 
 #: src/port-utils.py:1233
-msgid "Runtime: \n{}"
-msgstr "Runtime: \n{}"
+msgid "\nRuntime: \n{}"
+msgstr "\nRuntime: \n{}"
 
 #: src/port-utils.py:1234
-msgid "Optional: \n{}"
-msgstr "Опциональные: \n{}"
+msgid "\nOptional: \n{}"
+msgstr "\nОпциональные: \n{}"
 
 #: src/port-utils.py:1235
-msgid "Recommend: \n{}"
-msgstr "Рекомендуемые: \n{}"
+msgid "\nRecommend: \n{}"
+msgstr "\nРекомендуемые: \n{}"
 
 #: src/port-utils.py:1236
-msgid "Before: \n{}"
-msgstr "Перед этим: \n{}"
+msgid "\nBefore: \n{}"
+msgstr "\nПеред этим: \n{}"
 
 #: src/port-utils.py:1237
-msgid "Conflicts: \n{}"
-msgstr "Конфликты: \n{}"
+msgid "\nConflicts: \n{}"
+msgstr "\nКонфликты: \n{}"
 
 #: src/port-utils.py:984
 msgid "Info"
