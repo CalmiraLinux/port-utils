@@ -93,11 +93,6 @@ parser.add_argument("--update", "-u",
                     choices=["stable", "testing"],
                     type=str, help=_("Install or update Port system"))
 
-# Read news
-parser.add_argument("--news", "-n",
-                    choices=["stable", "testing"],
-                    help=_("Show the Port system changelog"))
-
 # Install port package
 parser.add_argument("--install", "-i", type=str,
                     help=_("Download, build and install port package"))
@@ -109,10 +104,6 @@ parser.add_argument("--remove", "-r", type=str,
 # Show info about port package
 parser.add_argument("--info", "-I", type=str,
                     help=_("Show information about port package"))
-
-# Install or update Calmira documentation
-parser.add_argument("--doc", "-d", type=str,
-                    choices=["stable", "testing"], help=_("Install or update distro documentation"))
 
 # Update the port-utils metadata
 parser.add_argument("--metadata", type=str,
@@ -816,58 +807,6 @@ class port_functions():
             except:
                 print(_("Error making {}").format(src_dir))
                 errors("ErrorMake", "base")
-                
-    
-    # News reader
-    def check_news(self, branch): 
-        self.branch = branch
-
-        gid = os.getgid()
-        if gid == 0:
-            news_file = "/var/cache/ports/news.txt"
-        else:
-            if os.path.isdir(user_cache_dir):
-                pass
-            else:
-                os.makedirs(user_cache_dir)
-
-            news_file = user_cache_dir + "/news.txt"
-        
-        if os.path.isfile(news_file):
-            os.remove(news_file)
-
-        # Checking work mode
-        if branch == "stable":
-            file_branch = "main"
-        elif branch == "testing":
-            file_branch = branch
-        else:
-            print(_("Error! Branch {} doesn't exist!").format(branch))
-            sys.exit(1)
-        
-        # Downloading
-        branch = "https://raw.githubusercontent.com/CalmiraLinux/Ports/" + file_branch + "/CHANGELOG.md" # Required file
-        
-        print(_("Download file {}").format(news_file))
-        wget.download(branch, news_file)
-        print("\n")
-
-        if os.path.isfile(news_file):
-            pass
-        else:
-            print(_("File {} not found").format(news_file))
-            errors("NoFile", "force-quit")
-
-        # Parsing settings file
-        program_config = open(SETTINGS, 'r')
-        program_config_data = json.load(program_config)
-
-        news_text = program_config_data["pager"] + " " + news_file
-        news_show = subprocess.run(news_text, shell=True)
-
-        # End parsing settings file
-        program_config.close()
-        return news_show.returncode
 
 # Работа с файлами для класса install_ports
 class port_files(object):# Create database
@@ -1223,9 +1162,9 @@ class update_data(object):
         - `portname` e.g. base/editors/vim
         """
 
-        self.port   = port
-        port_path   = PORTDIR   + "/" + port
-        port_json   = port_path + "/config.json"
+        self.port = port
+        port_path = PORTDIR   + "/" + port
+        port_json = port_path + "/config.json"
 
         print(_("Checking database lock..."))
         if port_files.check_lock_db():
@@ -1242,7 +1181,7 @@ class update_data(object):
             print(FAIL_MSG)
             sys.exit(0)
         
-        build_ports(port)
+        build_ports(port) # Build the port package and add this into database
 
 #################
 ##             ##
@@ -1260,22 +1199,18 @@ elif args.doc:
     # Update CalmiraLinux documentation
     update_ports('doc', args.doc)
 
-elif args.news:
-    # Port system changelog
-    port_functions.check_news(args.news)
-
 elif args.install:
     # Install port package
     build_ports(args.install)
-    exit(0)
+
 elif args.remove:
     # Remove port package
     remove_ports(args.remove)
-    exit(0)
+
 elif args.info:
     # Info about port package
     info_ports(args.info)
-    exit(0)
+
 elif args.metadata:
     # Get port system metadata
     update_ports.update_meta(args.metadata)
