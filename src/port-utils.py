@@ -56,6 +56,7 @@ PORT           = PORT_CACHE_DIR + "/ports"    # Files to install in /usr/ports
 DOC            = DOC_CACHE_DIR  + "/docs"     # Files to install in /usr/share/doc/Calmira
 METADATA       = FILES_DIR + "/metadata.json" # Links to Port system and CalmiraLinux documentation packages
 SETTINGS       = "/etc/port-utils.json"       # Program settings
+INITIAL_CONF   = FILES_DIR + "/initial-conf.json"
 CALM_RELEASE   = "/etc/calm-release"          # Calmira release info
 DATABASE       = "/var/db/ports/ports.db"     # Port system database
 
@@ -82,9 +83,14 @@ if __name__ != "__main__":
     sys.exit(1)
 
 ## COMMAND LINE PARSING ##
-# TODO: сменить парсер аргументов командной строки на свой,
-# либо разобраться с этим: для аргументов, у которых отсутствуют
-# дополнительные значения, убрать их проверку.
+if sys.argv[1] == "-h" and sys.argv[2] == "usage":
+    import random
+    message_list = ["Windows - must die, GNU/Linux - forever!", "CalmiraLinux LX4 will be released 11/15/2021",
+    "Чтобы россияне могли как следует подготовиться к выборам 2018 года, в магазинах теперь будет продаваться только одна марка водки, а в аптеках - только один вид презервативов.",
+    "Девушкам на заметку: Если вы зимой опаздываете на свидание, то вас может ожидать холодный конец!"]
+    print(random.choice(message_list))
+    exit(255)
+
 parser = argparse.ArgumentParser(description=_("port-utils - Port system software"),
                                  epilog=_("Good luck ;)"))
 
@@ -300,6 +306,13 @@ class update_ports(object):
             print(_("The metadata does not match the CalmiraLinux release!")) # FIXME: translate
             dialog_msg(return_code=1)
         
+        if os.path.isdir(PORT_CACHE_DIR):
+            try:
+                os.remove(PORT_CACHE_DIR)
+                os.makedirs(PORT_CACHE_DIR)
+            except:
+                print(_("Uknown error"))
+        
         update_ports.unpack_file(PORT_CACHE, PORT_CACHE_DIR)
         update_ports.install_file(PORT_CACHE_DIR, PORTDIR)
     
@@ -320,7 +333,7 @@ class update_ports(object):
         except:
             print(_("Uknown error"))
 
-    def check_update_meta(self, metadata):
+    def get_update_number(self, metadata):
         """
         Function for checking update_number
 
@@ -401,7 +414,7 @@ class update_ports(object):
             sys.exit(1)
         
         if changes:
-            difference = int(metadata_file["update_number"]) - int(update_ports.check_update_meta(METADATA))
+            difference = int(metadata_file["update_number"]) - int(update_ports.get_update_number(METADATA))
             print(_("Number of changes: {}\n").format(difference))
 
             print(_("Changes in the current update:"))
@@ -436,6 +449,16 @@ class update_ports(object):
                     sys.exit(1)
             
             dialog_msg()
+    
+    def get_distro_version(self):
+        """
+        Function for get CalmiraLinux version
+        """
+        f_distro = open(CALM_RELEASE)
+        distro = json.load(f_distro)
+
+        yield distro["distroVersion"]
+        f_distro.close()
 
     def check_meta(self):
         """
@@ -454,10 +477,7 @@ class update_ports(object):
         f_meta = open(METADATA)
         metadata = json.load(f_meta)
 
-        f_distro = open(CALM_RELEASE)
-        distro = json.load(f_distro)
-
-        if metadata["system_version"] == distro["distroVersion"]:
+        if int(metadata["system_version"]) == int(update_ports.get_distro_version()):
             log_msg("metadata OK", "ok")
             return_code =  0
         else:
@@ -465,7 +485,6 @@ class update_ports(object):
             return_code =  1
             
         f_meta.close()
-        f_distro.close()
         return return_code
 
     def get_file(self, branch):
