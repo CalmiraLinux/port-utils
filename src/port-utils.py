@@ -56,6 +56,7 @@ PORT           = PORT_CACHE_DIR + "/ports"    # Files to install in /usr/ports
 DOC            = DOC_CACHE_DIR  + "/docs"     # Files to install in /usr/share/doc/Calmira
 METADATA       = FILES_DIR + "/metadata.json" # Links to Port system and CalmiraLinux documentation packages
 SETTINGS       = "/etc/port-utils.json"       # Program settings
+INITIAL_CONF   = FILES_DIR + "/initial-conf.json"
 CALM_RELEASE   = "/etc/calm-release"          # Calmira release info
 DATABASE       = "/var/db/ports/ports.db"     # Port system database
 
@@ -82,9 +83,14 @@ if __name__ != "__main__":
     sys.exit(1)
 
 ## COMMAND LINE PARSING ##
-# TODO: сменить парсер аргументов командной строки на свой,
-# либо разобраться с этим: для аргументов, у которых отсутствуют
-# дополнительные значения, убрать их проверку.
+if sys.argv[1] == "-h" and sys.argv[2] == "usage":
+    import random
+    message_list = ["Windows - must die, GNU/Linux - forever!", "CalmiraLinux LX4 will be released 11/15/2021",
+    "Чтобы россияне могли как следует подготовиться к выборам 2018 года, в магазинах теперь будет продаваться только одна марка водки, а в аптеках - только один вид презервативов.",
+    "Девушкам на заметку: Если вы зимой опаздываете на свидание, то вас может ожидать холодный конец!"]
+    print(random.choice(message_list))
+    exit(255)
+
 parser = argparse.ArgumentParser(description=_("port-utils - Port system software"),
                                  epilog=_("Good luck ;)"))
 
@@ -276,88 +282,6 @@ def check_ports(mode):
 ## MAIN CLASSES ##
 ##              ##
 ##################
-class errors():
-    """
-    Класс для обработки ошибок.
-    
-    Возможности:
-    - Вывод текста ошибки на экран;
-    - Вывод кода ошибки на экран;
-    - Выход из программы при критической ошибке, либо по указанию программиста.
-    
-    Использование:
-    `errors(error, mode)`
-    
-    'error' - название ошибки в текстовом формате.
-    'mode' - нужный режим работы.
-    """
-    def __init__(self, error, mode):
-        self.error = error
-        self.mode = mode
-
-        errors.Error(error, mode)
-    
-    def Error(self, error, mode):
-        self.error = error
-        self.mode = mode
-
-        errors.check_error(error, mode)
-
-        error_message = "Error: " + error
-        log_msg(error_message, "error")
-    
-    def check_error(self, error, mode):
-        """
-        Function for print error message on screen and/or exit from program.
-
-        Usage:
-        
-        `errors.check_error(error, mode="work mode")`
-
-        * 'error' - error name.
-        * 'mode' - work mode.
-        
-        Work modes:
-        * 'force-quit' - force quit;
-        * 'base';
-        
-        Hacking:
-            All errors in '/usr/share/ports/errors.json' file.
-        """
-
-        self.error = error
-        self.mode = mode
-        
-        error_file = FILES_DIR + "/errors.json"
-
-        try:
-            f = open(error_file, 'r')
-            error_data = json.load(f) # Error list
-        except FileNotFoundError:
-            print(_("File {} not found").format(error_file))
-            return 1
-        
-        ports_settings = open(SETTINGS, 'r')
-        ports_settings_data = json.load(ports_settings) # Program settings
-
-        if ports_settings_data["print_error_message"] == "True":
-            try:
-                print(error_data[self.error]["message"])
-            except:
-                print(_("No error {} found").format(self.error))
-                return 1
-        else:
-            pass
-
-        try:
-            print(_("Error code: {}").format(error_data[self.error]["code"]))
-        except:
-            print(_("No error {} found").format(self.error))
-        
-        if error_data[self.error]["exitCode"] == "True" or self.mode == "force-quit":
-            print(_("Exit from port-utils..."))
-            sys.exit(error_data[self.error]["returnCode"])
-
 class update_ports(object):
     """
     Class for update Port system and CalmiraLinux documentation
@@ -382,6 +306,13 @@ class update_ports(object):
             print(_("The metadata does not match the CalmiraLinux release!")) # FIXME: translate
             dialog_msg(return_code=1)
         
+        if os.path.isdir(PORT_CACHE_DIR):
+            try:
+                os.remove(PORT_CACHE_DIR)
+                os.makedirs(PORT_CACHE_DIR)
+            except:
+                print(_("Uknown error"))
+        
         update_ports.unpack_file(PORT_CACHE, PORT_CACHE_DIR)
         update_ports.install_file(PORT_CACHE_DIR, PORTDIR)
     
@@ -402,7 +333,7 @@ class update_ports(object):
         except:
             print(_("Uknown error"))
 
-    def check_update_meta(self, metadata):
+    def get_update_number(self, metadata):
         """
         Function for checking update_number
 
@@ -422,7 +353,6 @@ class update_ports(object):
         
         meta_data = json.load(f)
         yield meta_data["update_number"]
-
         f.close()
     
     def update_meta(self, branch):
@@ -484,7 +414,7 @@ class update_ports(object):
             sys.exit(1)
         
         if changes:
-            difference = metadata_file["update_number"] - update_ports.check_update_meta(METADATA)
+            difference = int(metadata_file["update_number"]) - int(update_ports.get_update_number(METADATA))
             print(_("Number of changes: {}\n").format(difference))
 
             print(_("Changes in the current update:"))
@@ -519,6 +449,16 @@ class update_ports(object):
                     sys.exit(1)
             
             dialog_msg()
+    
+    def get_distro_version(self):
+        """
+        Function for get CalmiraLinux version
+        """
+        f_distro = open(CALM_RELEASE)
+        distro = json.load(f_distro)
+
+        yield distro["distroVersion"]
+        f_distro.close()
 
     def check_meta(self):
         """
@@ -532,18 +472,12 @@ class update_ports(object):
                 pass
             else:
                 print(_("File {} not found").format(file))
-                NoFile = True
-        
-        if NoFile:
-            errors("NoFile", "force-quit")
+                sys.exit(1)
         
         f_meta = open(METADATA)
         metadata = json.load(f_meta)
 
-        f_distro = open(CALM_RELEASE)
-        distro = json.load(f_distro)
-
-        if metadata["system_version"] == distro["distroVersion"]:
+        if int(metadata["system_version"]) == int(update_ports.get_distro_version()):
             log_msg("metadata OK", "ok")
             return_code =  0
         else:
@@ -551,7 +485,6 @@ class update_ports(object):
             return_code =  1
             
         f_meta.close()
-        f_distro.close()
         return return_code
 
     def get_file(self, branch):
@@ -576,11 +509,11 @@ class update_ports(object):
         except FileNotFoundError:
             log_msg("File not found", "error")
             print(_("File {} not found").format(METADATA))
-            errors("NoFile", "force-quit")
+            sys.exit(1)
         except:
             log_msg("Uknown error", "error")
             print(_("Uknown error"))
-            errors("Uknown", "base")
+            sys.exit(1)
         
         package_data = json.load(pkg_data)
 
@@ -600,12 +533,12 @@ class update_ports(object):
 
             else:
                 print(_("Uknown mode or branch for 'download_file'!"))
-                errors("NoMode", "base")
+                sys.exit(1)
 
         except:
             # FIXME: очень часто неправильно выбирается исключение и тип ошибки "Uknown"
             print(_("Uknown error"))
-            errors("Uknown", "base")
+            sys.exit(1)
     
     def unpack_file(self, file, extract_dir):
         """
@@ -698,17 +631,17 @@ class port_functions():
                     shutil.rmtree(CACHE)
                 except:
                     print(_("Error removing directory {}").format(CACHE))
-                    errors("ErrorRemove", "base")
+                    sys.exit(1)
                 
                 print(_("Make {}...").format(CACHE))
                 try:
                     os.makedirs(CACHE)
                 except:
                     print(_("Error making {}").format(CACHE))
-                    errors("ErrorMake", "base")
+                    sys.exit(1)
             else:
                 print(_("Fail: cache directory not found"))
-                errors("NoFile", "base")
+                sys.exit(1)
 
         elif mode == "log":
             # Очистка лога
@@ -729,7 +662,7 @@ class port_functions():
                 os.remove(file)
             except:
                 print(_("Error removing file {}").format(file))
-                errors("ErrorRemove", "base")
+                sys.exit(1)
 
         elif mode == "src":
             # Очистка директории /usr/src
@@ -751,14 +684,14 @@ class port_functions():
                 shutil.rmtree(src_dir)
             except:
                 print(_("Error removing directory {}").format(src_dir))
-                errors("ErrorRemove", "base")
+                sys.exit(1)
             
             print(_("Make {}...").format(src_dir))
             try:
                 os.makedirs(src_dir)
             except:
                 print(_("Error making {}").format(src_dir))
-                errors("ErrorMake", "base")
+                sys.exit(1)
 
 # Работа с файлами для класса install_ports
 class port_files(object):# Create database
@@ -812,7 +745,6 @@ class port_files(object):# Create database
 
         if os.path.isfile(database_lock_file):
             print(_("Error: the database already locked!"))
-            errors("DbAlreadyLocked", "no-exit")
             return 1
         else:
             try:
@@ -954,7 +886,7 @@ class build_ports(object):
                 NoFile = True
         
         if NoFile:
-            errors("NoFile", "force-quit")
+            sys.exit(1)
         
         print(_("Checking {}...").format(remove_file), end = " ")
         if os.path.isfile(remove_file):
@@ -1058,7 +990,7 @@ class remove_ports(object):
                 NoFile = True
         
         if NoFile:
-            errors("NoFile", "force-quit")
+            sys.exit(1)
         else:
             return 0
 
@@ -1101,7 +1033,7 @@ class remove_ports(object):
         
         package_data = [(package["name"])]
         
-        conn = sqlite3.connect(DATABASE)
+        conn   = sqlite3.connect(DATABASE)
         cursor = conn.cursor()
         
         cursor.execute("DELETE FROM ports WHERE name=?", package_data)
