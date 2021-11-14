@@ -1,2 +1,6 @@
 # Файлы с настройками VSCodium
 .vscode
+
+# Устаревшие файлы
+src/port-utils.py
+src/modules/libport.py

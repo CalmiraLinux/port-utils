@@ -2,5 +2,7 @@
     "debug": "False",
     "print_error_message": "False",
     "pager": "/usr/bin/less",
-    "downgrade_with_update": "False"
+    "downgrade_with_fetch": "False",
+    "repo": "https://github.com/CalmiraLinux/Ports/raw/",
+    "branch": "testing"
 }
