@@ -6,10 +6,7 @@ import shutil
 import tarfile
 import wget
 import json
-import subprocess
-import sqlite3
 import gettext
-import time
 
 gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
@@ -211,7 +208,7 @@ class fetch_ports():
     unpack = CACHE "/ports" # Куда распаковывать
     unpack_file = ports_unpack + "/ports" # Директория с портами
 
-    def check_archive(self):
+    def clean_files(self):
         """
         Checking for the presence of a previous version of the
         ports system in the cache
@@ -228,7 +225,7 @@ class fetch_ports():
         Getting an archive with a port system from CalmiraLinux repositories
         """
 
-        fetch_ports.check_archive()
+        fetch_ports.clean_files()
 
         file = settings.get("repo") + settings.get("branch") + "/ports.txz"
 
