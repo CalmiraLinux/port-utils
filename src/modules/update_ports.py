@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+# Модуль с функциями, предназначенными для обновления
+# системы портов до актуальной версии
+# (C) 2021 Михаил Краснов <linuxoid85@gmail.com>
 
 import os
 import sys
@@ -7,6 +10,7 @@ import tarfile
 import wget
 import json
 import gettext
+import ports_manage
 
 gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
