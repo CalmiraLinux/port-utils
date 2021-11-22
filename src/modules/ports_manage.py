@@ -27,20 +27,20 @@ METADATA     = FILES_DIR + "/metadata.json"
 METADATA_TMP = "/tmp/metadata.json"
 SETTINGS     = "/etc/port-utils.json"
 
-def dialog_msg(message, mode="none", return_code=0):
+def dialog_msg(message, mode="none", return_code=0) -> bool:
     """ Function for print dialog messages """
 
-    print("{} (y/n) ".format(message), end = 0)
+    print("{} (y/n)".format(message), end = " ")
     run = input()
 
     if run == "y" or run == "Y":
         print(_("OK"))
-        return 0
+        return True
     else:
         if mode == "exit":
             exit(return_code)
         else:
-            return 1
+            return False
 
 class port_info():
     """Viewing port information"""
@@ -181,7 +181,8 @@ class build_ports():
                 dialog_msg(_("Continue building (POTENTIALLY UNSAFE)?"), return_code=1)
             else:
                 print(_("This port is compatible with the installed CalmiraLinux release ;-) !"))
-                dialog_msg(_("Continue?"))
+                if not dialog_msg(_("Continue?")):
+                    exit(1)
 
         else:
             print(_("Port '{0}' NOT fount in {1}").format(port, PORTDIR))
