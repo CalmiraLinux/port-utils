@@ -211,13 +211,13 @@ class build_ports():
 
         port_dir = PORTDIR + "/" + port
         port_config = port_dir + "/config.json"
-        add_time = time.ctime() # Времядобавление порта в базу данных
+        add_time = time.ctime() # Время добавления порта в базу данных
 
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
 
         if not os.path.isfile(port_config):
-            print(_("File {0} NOT found in {1}").format(port_config, port_dir))
+            print(_("File '{0}' NOT found in {1}").format(port_config, port_dir))
             exit(1)
         
         f = open(port_config)
@@ -227,8 +227,12 @@ class build_ports():
             data["name"], data["version"], data["maintainer"], data["release"], add_time
         )]
 
-        cursor.execute("INSERT INTO ports VALUES (?,?,?,?,?)", register)
-        conn.commit()
+        try:
+            cursor.execute("INSERT INTO ports VALUES (?,?,?,?,?)", register)
+            conn.commit()
+        except:
+            print(_("Unknown error while adding port '{0}' to the database").format(port))
+            exit(1)
     
     def remove(self, port):
         """

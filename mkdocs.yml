@@ -1,10 +1,99 @@
-site_name: port-utils
+site_name: port-utils reference manual
+site_description: На данном сайте располагается документация утилиты port-utils для обычных пользователей и разработчиков
+site_author: Michail Krasnov <linuxoid85@gmail.com>
+
+theme:
+  name: 'material'
+  logo: https://github.com/CalmiraLinux/CalmiraLinux/raw/lx4/v1.1/design/calmira_logo_normal.png
+  favicon: https://github.com/CalmiraLinux/CalmiraLinux/raw/lx4/v1.1/design/calmira_logo_normal.png
+  language: ru
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.top
+    - navigation.instant
+  include_sidebar: true
+  features:
+    - content.code.annotate
+    - content.tabs.link
+    #- navigation.expand
+    - navigation.indexes
+    - search.highlight
+    - search.share
+    - search.suggest
+    - navigation.top
+    - toc.integrate
+  palette:
+    - scheme: default
+      #primary: black
+      #accent: blue
+      toggle:
+        icon: material/eye-outline
+        name: Переключиться в тёмный режим
+    - scheme: slate
+      primary: black
+      accent: blue
+      toggle:
+        icon: material/eye
+        name: Переключиться в светлый режим
+  font:
+    text: 'Open Sans'
+    code: 'Droid Sans Mono'
+
+markdown_extensions:
+  - admonition
+  - abbr
+  - def_list
+  - md_in_html
+  - codehilite
+  - meta
+  - attr_list
+  - footnotes
+  - tables
+  - toc:
+      permalink: ⚓︎
+  - markdown.extensions.tables
+  - pymdownx.arithmatex
+  - pymdownx.betterem
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.details
+  - pymdownx.magiclink:
+      repo_url_shortener: true
+      repo_url_shorthand: true
+      provider: "github"
+      user: "facelessuser"
+      repo: "pymdown-extensions"
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.smartsymbols
+  - pymdownx.tasklist
+  - pymdownx.highlight:
+      linenums: true
+      linenums_style: pymdownx-inline
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+plugins:
+  - search:
+      lang: ru
+
 nav:
-  - Введение:
-    - Введение в port-utils: intro.md
-    - Использование: usage.md
-  - Работа с системой портов:
-    - Введение: ports/intro.md
-    - Обновление СП: ports/update-ports.md
-    - Обновление документации CalmiraLinux: ports/update-docs.md
-theme: readthedocs
+  - Для обычных пользователей:
+    - Домашняя страница: index.md
+    - Работа с системой Портов:
+      - Введение: ports/README.md
+      - Обновление СП: ports/update-ports.md
+      - Установка порта: ports/install-ports.md
+  - Для разработчиков:
+    - Введение: develop/README.md
+    - ports-manage.py:
+      - Основные функции: develop/ports_manage.md
+      - dialog_msg(): develop/ports_manage/functions/dialog_msg.md
+    - update_ports.py: develop/update_ports.md

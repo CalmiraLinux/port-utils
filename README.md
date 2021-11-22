@@ -44,6 +44,7 @@ port-utils --info base/gcc
 
 Python Modules:
 - `wget`;
+- `sqlite3` (пакет `base/python` должен быть пересобран с поддержкой SQLite3);
 - `subprocess`.
 
 В дистрибутиве CalmiraLinux эти модули уже установлены, а для CPL требуется установить их вручную.
