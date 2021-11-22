@@ -229,3 +229,34 @@ class build_ports():
 
         cursor.execute("INSERT INTO ports VALUES (?,?,?,?,?)", register)
         conn.commit()
+    
+    def remove(self, port):
+        """
+        Function for remove port package from system
+
+        Usage:
+        `build_ports.remove(port)`
+
+        - port - port name (e.g. 'base/editors/vim')
+        """
+
+        self.port = port
+
+        port_dir = PORTDIR + "/" + port
+        port_config = port_dir + "/config.json"
+        port_remove = port_dir + "/remove"
+
+        if build_ports.check(port, "remove"):
+            print(_("Port '{0}' found in {1}").format(port, PORTDIR))
+        else:
+            print(_("Port '{0}' NOT found in {1}").format(port, PORTDIR))
+            exit(0)
+        
+        remove = subprocess.run(port_remove, shell = True)
+
+        if remove.returncode == 0:
+            print(_("\n\n\033[1m\033[32mOperation success!\033[0m"))
+        else:
+            print(_("\n\n\033[1m\033[31mOperation FAIL!\033[0m"))
+        
+        return remove.returncode
