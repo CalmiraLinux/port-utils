@@ -34,7 +34,6 @@ def dialog_msg(message, mode="none", return_code=0) -> bool:
     run = input()
 
     if run == "y" or run == "Y":
-        print(_("OK"))
         return True
     else:
         if mode == "exit":
@@ -264,3 +263,21 @@ class build_ports():
             print(_("\n\n\033[1m\033[31mOperation FAIL!\033[0m"))
         
         return remove.returncode
+    
+    def remove_from_db(self, name):
+        """
+        Function for remove port information from ports database.
+
+        Usage:
+        `build_ports.remove_from_db(name)`
+
+        - name - port name (e.g. 'base/editors/vim')
+        """
+
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+
+        command = "DELETE from ports WHERE name = '" + name + "'"
+
+        cursor.execute(command)
+        conn.commit()
