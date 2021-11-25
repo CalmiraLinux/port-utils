@@ -279,5 +279,9 @@ class build_ports():
 
         command = "DELETE from ports WHERE name = '" + name + "'"
 
-        cursor.execute(command)
-        conn.commit()
+        try:
+            cursor.execute(command)
+            conn.commit()
+        except:
+            print(_("Error while removing package '{}' from database!").format(name))
+            exit(1)

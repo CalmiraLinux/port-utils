@@ -1,6 +1,7 @@
 site_name: port-utils reference manual
 site_description: На данном сайте располагается документация утилиты port-utils для обычных пользователей и разработчиков
 site_author: Michail Krasnov <linuxoid85@gmail.com>
+site_dir: site
 
 theme:
   name: 'material'

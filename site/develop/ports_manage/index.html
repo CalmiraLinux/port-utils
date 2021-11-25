@@ -18,7 +18,7 @@
     
     
       
-        <title>ports-manage.py - port-utils reference manual</title>
+        <title>Основные функции - port-utils reference manual</title>
       
     
     
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ports-manage.py
+              Основные функции
             
           </span>
         </div>
@@ -395,6 +395,40 @@
     
   
   
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" checked>
+      
+      
+      
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_2_2">
+          ports-manage.py
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="ports-manage.py" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          ports-manage.py
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
@@ -404,12 +438,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          ports-manage.py
+          Основные функции
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        ports-manage.py
+        Основные функции
       </a>
       
         
@@ -504,6 +538,27 @@
   
   
     <li class="md-nav__item">
+      <a href="functions/dialog_msg/" class="md-nav__link">
+        dialog_msg()
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../update_ports/" class="md-nav__link">
         update_ports.py
       </a>
@@ -570,7 +625,7 @@
 </thead>
 <tbody>
 <tr>
-<td><a href="functions/dialog_msg.html"><code>dialog_msg(message, mode="none", return_code=0)</code></a></td>
+<td><a href="../ports_manage/functions/dialog_msg/"><code>dialog_msg(message, mode="none", return_code=0)</code></a></td>
 <td>Функция для печати диалоговых сообщений в <code>stdout</code>. Пользователь должен ввести Y/y для подтверждения, либо n/N для отклонения. Ответы содержатся в переменной <code>run</code>. Если выбран режим работы <code>exit</code>, то провоцируется выход из программы, если режим не указан, либо установлен любой другой, то функция завершает работу, не спровоцировав выход</td>
 <td><code>message</code> - текст сообщения; <code>mode</code> - режим работы (<code>exit</code> - для выхода из программы); <code>return_code</code> - код выхода из программы</td>
 <td>Выход с кодом <code>return_code</code>, если режим работы (<code>mode</code>) = <code>exit</code>; возвращение значения <code>True</code> функции, если отвечено Y или y и не выбран режим <code>exit</code>, возвращение значения <code>False</code> функции, если выбрано N/n (или любые другие значения <code>run</code>) и не выбран режим <code>exit</code>. Выход из программы, в таком случае, не провоцируется</td>
@@ -592,7 +647,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>print_item(msg, param)</code></td>
+<td><a href="../ports_manage/classes/port_info/print_item/"><code>print_item(msg, param)</code></a></td>
 <td>Проверяет наличие параметра <code>param</code> в <code>config.json</code> порта, если параметр существует, то выводит в stdout строку типа <code>msg: param</code></td>
 <td><code>msg</code> - сообщение, выводимое на экран в случае наличия параметра <code>param</code></td>
 <td><code>True</code> в случае наличия параметра, <code>False</code> - в случае отсутствия</td>
@@ -654,6 +709,12 @@
 <td><code>port</code> - имя порта</td>
 <td>Код завершения скрипта <code>remove</code></td>
 </tr>
+<tr>
+<td><code>remove_from_db(name)</code></td>
+<td>Удаляет порт с именем <code>name</code> из базы данных</td>
+<td><code>name</code> - имя порта</td>
+<td>Никаких</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -708,13 +769,13 @@
       
       
         
-        <a href="../update_ports/" class="md-footer__link md-footer__link--next" aria-label="Вперед: update_ports.py" rel="next">
+        <a href="functions/dialog_msg/" class="md-footer__link md-footer__link--next" aria-label="Вперед: dialog_msg()" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Вперед
               </span>
-              update_ports.py
+              dialog_msg()
             </div>
           </div>
           <div class="md-footer__button md-icon">
