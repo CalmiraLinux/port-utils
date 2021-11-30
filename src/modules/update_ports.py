@@ -10,22 +10,12 @@ import tarfile
 import wget
 import json
 import gettext
-import ports_manage
+import ports_default # Стандартные функции и переменные Ports API
+import ports_manage  # Управление системой портов
 
 gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
 _ = gettext.gettext
-
-PORTDIR      = "/usr/ports"
-PROGRAM_DIR  = "/usr/share/ports"
-CACHE        = "/var/cache/ports"
-DB           = "/var/db/ports/ports.db"
-METADATA     = PROGRAM_DIR + "/metadata.json"
-CALM_RELEASE = "/etc/calm-release"
-FILES_DIR    = "/usr/share/ports"
-METADATA     = FILES_DIR + "/metadata.json"
-METADATA_TMP = "/tmp/metadata.json"
-SETTINGS     = "/etc/port-utils.json"
 
 class settings():
     
@@ -47,7 +37,9 @@ class settings():
         check_error = False
 
         for param in settings.params:
-            if data[param]:
+            try:
+                print(_("Param [{data[param]}]: ok"))
+            except KeyError:
                 print(_("Param [{}]: not found").format(param))
                 check_error = True
         
@@ -65,22 +57,17 @@ class settings():
             exit(1)
 
         data = json.load(f)
+        try:
+            parameter = data[param]
+        except KeyError:
+            print(_(f"Param {param} doesn't found!"))
+            return None
 
-        match param:
-            case "branch":
-                yield data["branch"]
-            case "repo":
-                yield data["repo"]
-            case "debug":
-                yield data["debug"]
-            case "pager":
-                yield data["pager"]
-            case "downgrade_with_fetch":
-                yield data["downgrade_with_fetch"]
-        
         f.close()
 
-class fetch_metadata(object):
+        return parameter
+
+class fetch_metadata():
     """
     Class for update Port system metadata
 
@@ -107,10 +94,9 @@ class fetch_metadata(object):
         
         f = open(file, 'r')
         data = json.load(data)
-
-        yield data
-
         f.close()
+
+        return data
 
     def get_metadata(self, branch):
         """
@@ -139,9 +125,12 @@ class fetch_metadata(object):
             print(_("File {} not found").format(file))
             exit(1)
         
-        f = fetch_metadata.parse(file)
-        num = int(f["update_number"])
+        f = open(file, "r")
+        data = json.load(f)
         
+        num = data["update_number"]
+        f.close()
+
         return num
     
     def get_difference(self) -> str:

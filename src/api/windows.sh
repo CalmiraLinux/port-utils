@@ -7,6 +7,8 @@
 # Depends:
 # dialog, tput
 
+set -Eeuo pipefail
+
 BACKTITLE="CalmiraLinux Port system"
 SRCDIR="/usr/src"
 
@@ -16,10 +18,6 @@ SRCDIR="/usr/src"
 function msg() {
     dialog --backtitle $BACKTITLE --title " $1 " \
         --msgbox "$2" 0 0
-}
-
-function print_info_msg() {
-    echo -e "\e[1;32m$1\e[0m"
 }
 
 # Function for print yes/no dialogs

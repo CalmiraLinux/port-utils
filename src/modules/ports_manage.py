@@ -12,6 +12,8 @@ import time
 import subprocess
 import sqlite3
 
+import ports_default
+
 gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
 _ = gettext.gettext
@@ -26,20 +28,6 @@ FILES_DIR    = "/usr/share/ports"
 METADATA     = FILES_DIR + "/metadata.json"
 METADATA_TMP = "/tmp/metadata.json"
 SETTINGS     = "/etc/port-utils.json"
-
-def dialog_msg(message, mode="none", return_code=0) -> bool:
-    """ Function for print dialog messages """
-
-    print("{} (y/n)".format(message), end = " ")
-    run = input()
-
-    if run == "y" or run == "Y":
-        return True
-    else:
-        if mode == "exit":
-            exit(return_code)
-        else:
-            return False
 
 class port_info():
     """Viewing port information"""
@@ -62,15 +50,18 @@ class port_info():
         
         data = json.load(f)
 
-        if not data[param]:
-            message = _(f"{msg}: Information is not specified")
+        try:
+            print(f"[{msg}]: {data[param]}")
+            f.close()
+
+            return True
+
+        except KeyError:
+            message = _(f"[{msg}]: Information is not specified")
             print(message)
-            yield False
-        else:
-            print(f"{msg}: {data[param]}")
-            yield True
-        
-        f.close()
+            f.close()
+
+            return False
 
     def get(self, port):
         self.port = port
@@ -135,20 +126,20 @@ class build_ports():
 
         f = open(port_config)
         data = json.load(f)
-
-        yield data["release"]
+        release = data["release"]
 
         f.close()
+        return release
     
     def get_calm_release(self):
         """ Get CalmiraLinux release number """
 
         f = open(CALM_RELEASE)
         data = json.load(f)
-
-        yield data["distroVersion"]
+        distro_version = data["distroVersion"]
 
         f.close()
+        return distro_version
     
     def build(self, port):
         """
@@ -174,26 +165,27 @@ class build_ports():
             calm_release = build_ports.get_calm_release()
 
             if port_release != calm_release:
-                print(
-                    _("[WARNING] - this port may NOT be intended for installation on this version of the operating system. If you are not sure that it will work correctly in CalmiraLinux {}, then answer 'n'!").format(CALM_RELEASE)
-                )
-                dialog_msg(_("Continue building (POTENTIALLY UNSAFE)?"), return_code=1)
+                print(_("[WARNING] - this port may NOT be intended for installation on this version of the operating system. If you are not sure that it will work correctly in CalmiraLinux {}, then answer 'n'!").format(CALM_RELEASE))
+
+                port_defaults.dialog_msg(_("Continue building (POTENTIALLY UNSAFE)?"), return_code=1)
             else:
                 print(_("This port is compatible with the installed CalmiraLinux release ;-) !"))
-                if not dialog_msg(_("Continue?")):
+
+                if not port_defaults.dialog_msg(_("Continue?")):
                     exit(1)
 
         else:
             print(_("Port '{0}' NOT fount in {1}").format(port, PORTDIR))
             exit(1)
-        
+
         build = subprocess.run(port_install, shell=True)
 
         if build.returncode == 0:
-            print(_("\n\n\033[1m\033[32mOperation success!\033[0m"))
+            print(_("\n\n\033[1m\033[32mOperation success!\033[0m")
         else:
             print(_("\n\n\033[1m\033[31mOperation FAIL!\033[0m"))
-        
+            print(_("\033[1mReturncode:\033[0m {}").format(build.returncode))
+
         return build.returncode
     
     def add_in_db(self, port):
@@ -210,7 +202,7 @@ class build_ports():
 
         port_dir = PORTDIR + "/" + port
         port_config = port_dir + "/config.json"
-        add_time = time.ctime() # Время добавления порта в базу данных
+        add_time = time.ctime() # Время добавления порта в базу данных. Пусть равняется времени вызова этой функции.
 
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
@@ -224,7 +216,7 @@ class build_ports():
 
         register = [(
             data["name"], data["version"], data["maintainer"], data["release"], add_time
-        )]
+        )] # Запись, которая отправится в БД
 
         try:
             cursor.execute("INSERT INTO ports VALUES (?,?,?,?,?)", register)
@@ -255,7 +247,7 @@ class build_ports():
             print(_("Port '{0}' NOT found in {1}").format(port, PORTDIR))
             exit(0)
         
-        remove = subprocess.run(port_remove, shell = True)
+        remove = subprocess.run(port_remove, shell=True)
 
         if remove.returncode == 0:
             print(_("\n\n\033[1m\033[32mOperation success!\033[0m"))
