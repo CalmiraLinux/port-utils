@@ -12,7 +12,7 @@ import time
 import subprocess
 import sqlite3
 
-import ports_default
+import port_defaults
 
 gettext.bindtextdomain('port-utils', '/usr/share/locale')
 gettext.textdomain('port-utils')
